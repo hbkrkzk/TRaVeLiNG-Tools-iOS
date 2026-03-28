@@ -1,0 +1,26 @@
+# Xcode
+*.xcodeproj/xcuserdata/
+*.xcodeproj/xcshareddata/
+DerivedData/
+.DS_Store
+build/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcworkspace/xcuserdata/
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Swift
+.build/
+.swiftpm/
+
+# Python
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
