@@ -23,9 +23,9 @@ struct BoardingBarcodeView: View {
     @AppStorage("boarding.operatorCode") private var operatorCode = ""
     @AppStorage("boarding.flightNum") private var flightNum = ""
     @AppStorage("boarding.departureDate") private var departureDateTimeInterval = Date().timeIntervalSince1970
-    @AppStorage("boarding.bookingRef") private var bookingRef = ""
+    @State private var bookingRef = ""
     @AppStorage("boarding.seat") private var seat = ""
-    @AppStorage("boarding.boardingIndex") private var boardingIndex = ""
+    @State private var boardingIndex = ""
     @AppStorage("boarding.cabinClass") private var cabinClass = "Y"
     @AppStorage("boarding.codeType") private var codeTypeRaw = BarcodeType.aztec.rawValue
     @State private var copyStatus = "コピー"
@@ -68,7 +68,93 @@ struct BoardingBarcodeView: View {
         let seatField = padLeft(seat, count: 4)
         let seqField = upPadRight(padLeft(boardingIndex, count: 4), count: 5)
 
-        return "M1\(nameField)E\(refField)\(fromField)\(toField)\(opField)\(fnField)\(dayField)\(cabinClass)\(seatField)\(seqField)100"
+        let part1 = "M1\(nameField)E\(refField)"
+        let part2 = "\(fromField)\(toField)\(opField)\(fnField)"
+        let part3 = "\(dayField)\(cabinClass)\(seatField)\(seqField)100"
+        
+        return part1 + part2 + part3
+    }
+
+    private var flightInfoSection: some View {
+        Section("区間・便情報") {
+            LabeledInputField(title: "出発地", text: $from, example: "HND", field: .from, focusedField: $focusedField)
+                .onChange(of: from) { newValue in
+                    from = String(newValue.uppercased().prefix(3))
+                }
+
+            LabeledInputField(title: "到着地", text: $to, example: "NYC", field: .to, focusedField: $focusedField)
+                .onChange(of: to) { newValue in
+                    to = String(newValue.uppercased().prefix(3))
+                }
+
+            LabeledInputField(title: "運航会社コード", text: $operatorCode, example: "NH", field: .operatorCode, focusedField: $focusedField)
+                .onChange(of: operatorCode) { newValue in
+                    operatorCode = String(newValue.uppercased().prefix(3))
+                }
+
+            let flightView = LabeledInputField(title: "便名", text: $flightNum, example: "001", field: .flightNum, focusedField: $focusedField)
+            let flightWithKeyboard = flightView.keyboardType(.numbersAndPunctuation)
+            
+            flightWithKeyboard
+                .onChange(of: flightNum) { newValue in
+                    flightNum = String(newValue.prefix(5))
+                }
+
+            DatePicker("出発日", selection: departureDateBinding, displayedComponents: .date)
+        }
+    }
+
+    private var classSeatSection: some View {
+        Section("クラス・座席") {
+            Picker("搭乗クラス", selection: $cabinClass) {
+                Text("エコノミー (Y)").tag("Y")
+                Text("ビジネス (C)").tag("C")
+                Text("ファースト (F)").tag("F")
+            }
+
+            LabeledInputField(title: "座席番号", text: $seat, example: "23A", field: .seat, focusedField: $focusedField)
+                .onChange(of: seat) { newValue in
+                    seat = String(newValue.uppercased().prefix(4))
+                }
+        }
+    }
+
+    private var referenceInfoSection: some View {
+        Section("参照情報") {
+            LabeledInputField(title: "PNR", text: $bookingRef, example: "ABC123", field: .bookingRef, focusedField: $focusedField)
+                .onChange(of: bookingRef) { newValue in
+                    bookingRef = String(newValue.uppercased().prefix(7))
+                }
+
+            let boardingView = LabeledInputField(title: "搭乗インデックス", text: $boardingIndex, example: "12", field: .boardingIndex, focusedField: $focusedField)
+            let boardingWithKeyboard = boardingView.keyboardType(.numberPad)
+            
+            boardingWithKeyboard
+                .onChange(of: boardingIndex) { newValue in
+                    boardingIndex = String(newValue.prefix(4))
+                }
+        }
+    }
+
+    private var outputSection: some View {
+        Section("出力") {
+            Picker("バーコード形式", selection: codeTypeBinding) {
+                Text("Aztec（標準）").tag(BarcodeType.aztec)
+                Text("PDF417").tag(BarcodeType.pdf417)
+            }
+
+            if let renderedBarcodeImage {
+                Image(uiImage: renderedBarcodeImage)
+                    .interpolation(.none)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxHeight: 220)
+                    .frame(maxWidth: .infinity)
+            } else {
+                Text("バーコードを生成できませんでした")
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 
     var body: some View {
@@ -82,87 +168,22 @@ struct BoardingBarcodeView: View {
 
             Section("乗客情報") {
                 LabeledInputField(title: "名", text: $firstName, example: "John", field: .firstName, focusedField: $focusedField)
-                    .onChange(of: firstName) { _, newValue in
+                    .onChange(of: firstName) { newValue in
                         firstName = newValue.uppercased()
                     }
 
                 LabeledInputField(title: "姓", text: $lastName, example: "Smith", field: .lastName, focusedField: $focusedField)
-                    .onChange(of: lastName) { _, newValue in
+                    .onChange(of: lastName) { newValue in
                         lastName = newValue.uppercased()
                     }
             }
 
             // 他のセクションは遅延レンダリング
             if isViewLoaded {
-                Section("区間・便情報") {
-                    LabeledInputField(title: "出発地", text: $from, example: "HND", field: .from, focusedField: $focusedField)
-                        .onChange(of: from) { _, newValue in
-                            from = String(newValue.uppercased().prefix(3))
-                        }
-
-                    LabeledInputField(title: "到着地", text: $to, example: "NYC", field: .to, focusedField: $focusedField)
-                        .onChange(of: to) { _, newValue in
-                            to = String(newValue.uppercased().prefix(3))
-                        }
-
-                    LabeledInputField(title: "運航会社コード", text: $operatorCode, example: "NH", field: .operatorCode, focusedField: $focusedField)
-                        .onChange(of: operatorCode) { _, newValue in
-                            operatorCode = String(newValue.uppercased().prefix(3))
-                        }
-
-                    LabeledInputField(title: "便名", text: $flightNum, example: "001", field: .flightNum, focusedField: $focusedField)
-                        .keyboardType(.numbersAndPunctuation)
-                        .onChange(of: flightNum) { _, newValue in
-                            flightNum = String(newValue.prefix(5))
-                        }
-
-                    DatePicker("出発日", selection: departureDateBinding, displayedComponents: .date)
-                }
-
-                Section("クラス・座席") {
-                    Picker("搭乗クラス", selection: $cabinClass) {
-                        Text("エコノミー (Y)").tag("Y")
-                        Text("ビジネス (C)").tag("C")
-                        Text("ファースト (F)").tag("F")
-                    }
-
-                    LabeledInputField(title: "座席番号", text: $seat, example: "23A", field: .seat, focusedField: $focusedField)
-                        .onChange(of: seat) { _, newValue in
-                            seat = String(newValue.uppercased().prefix(4))
-                        }
-                }
-
-                Section("参照情報") {
-                    LabeledInputField(title: "PNR", text: $bookingRef, example: "ABC123", field: .bookingRef, focusedField: $focusedField)
-                        .onChange(of: bookingRef) { _, newValue in
-                            bookingRef = String(newValue.uppercased().prefix(7))
-                        }
-
-                    LabeledInputField(title: "搭乗インデックス", text: $boardingIndex, example: "12", field: .boardingIndex, focusedField: $focusedField)
-                        .keyboardType(.numberPad)
-                        .onChange(of: boardingIndex) { _, newValue in
-                            boardingIndex = String(newValue.prefix(4))
-                        }
-                }
-
-                Section("出力") {
-                    Picker("バーコード形式", selection: codeTypeBinding) {
-                        Text("Aztec（標準）").tag(BarcodeType.aztec)
-                        Text("PDF417").tag(BarcodeType.pdf417)
-                    }
-
-                    if let renderedBarcodeImage {
-                        Image(uiImage: renderedBarcodeImage)
-                            .interpolation(.none)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxHeight: 220)
-                            .frame(maxWidth: .infinity)
-                    } else {
-                        Text("バーコードを生成できませんでした")
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                flightInfoSection
+                classSeatSection
+                referenceInfoSection
+                outputSection
             }
         }
         .toolbar {
@@ -188,7 +209,8 @@ struct BoardingBarcodeView: View {
                 }
             }
         }
-        .navigationTitle("Boarding Barcode")
+        .navigationTitle("Boarding Pass Code")
+        .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
             if focusedField == nil {
                 VStack(alignment: .leading, spacing: 8) {
@@ -221,22 +243,18 @@ struct BoardingBarcodeView: View {
             }
         }
         .onAppear {
-            if bookingRef.isEmpty {
-                bookingRef = Self.randomBookingRef()
-            }
-            if boardingIndex.isEmpty {
-                boardingIndex = String(Int.random(in: 1...200))
-            }
+            bookingRef = Self.randomBookingRef()
+            boardingIndex = String(Int.random(in: 1...200))
             // 0.05秒後にセクション表示 + バーコード生成開始
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                 isViewLoaded = true
                 updateBarcodeImage()
             }
         }
-        .onChange(of: rawData) { _, _ in
+        .onChange(of: rawData) { _ in
             updateBarcodeImage()
         }
-        .onChange(of: codeTypeRaw) { _, _ in
+        .onChange(of: codeTypeRaw) { _ in
             updateBarcodeImage()
         }
     }
@@ -272,7 +290,8 @@ struct BoardingBarcodeView: View {
     }
 
     private static func randomBookingRef() -> String {
-        String(UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(6)).uppercased()
+        let charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        return String((0..<6).map { _ in charset.randomElement()! })
     }
 
     private func upPadRight(_ value: String, count: Int) -> String {

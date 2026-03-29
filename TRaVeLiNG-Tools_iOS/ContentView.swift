@@ -38,7 +38,7 @@ struct ContentView: View {
                         }
                     } label: {
                         ToolCard(
-                            title: "Skyscannerアフィリエイト",
+                            title: "Skyscanner Link",
                             subtitle: "Skyscannerの検索リンクからアフィリエイトリンクを生成・短縮します。",
                             systemImage: "link.circle.fill"
                         )
@@ -51,7 +51,7 @@ struct ContentView: View {
                         }
                     } label: {
                         ToolCard(
-                            title: "Boarding Barcode",
+                            title: "Boarding Pass Code",
                             subtitle: "搭乗券の入力情報をもとに、IATA文字列と Aztec / PDF417 バーコードを生成します。",
                             systemImage: "airplane.departure"
                         )

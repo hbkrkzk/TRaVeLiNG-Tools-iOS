@@ -438,20 +438,8 @@ class SkyscannerURLService {
             let formattedDepartDate = formatDateToYYMMDD(departDate)
             print("✅ Extracted: \(departure) -> \(arrival) on \(formattedDepartDate)")
             
-            // パターン2: /config/... 形式をチェック（往路のみ）
-            if pathComponents.count >= 6 && pathComponents[5] == "config" {
-                print("✅ One-way flight (config pattern)")
-                return SkyscannerFlightInfo(
-                    departure: departure,
-                    arrival: arrival,
-                    departureDate: formattedDepartDate,
-                    returnDate: nil,
-                    isRoundTrip: false
-                )
-            }
-            
-            // パターン3: 通常の往復
-            if pathComponents.count >= 6 && !pathComponents[5].isEmpty && pathComponents[5] != "config" {
+            // 往復/片道判定: pathComponents[5]が存在してconfigでなければ往復
+            if pathComponents.count > 5 && pathComponents[5] != "config" {
                 let returnDate = pathComponents[5]
                 let formattedReturnDate = formatDateToYYMMDD(returnDate)
                 print("✅ Return date: \(formattedReturnDate)")
@@ -525,16 +513,24 @@ class SkyscannerURLService {
     
     func shortenURL(_ url: String, completion: @escaping (String?) -> Void) {
         let apiKey = "7d2ad123799e3bdd05a3553b5d2f7968"
-        let encodedUrl = url.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? url
+        
+        // Web版と同様にencodeURIComponentの動作を再現
+        // URLエンコーディングで特殊文字（?, &, =などを含む）をすべてエンコード
+        var allowedCharacters = CharacterSet.urlQueryAllowed
+        allowedCharacters.remove(charactersIn: "?&=")
+        
+        let encodedUrl = url.addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? url
         let urlString = "https://xgd.io/V1/shorten?url=\(encodedUrl)&key=\(apiKey)"
         
-        guard let url = URL(string: urlString) else {
+        guard let requestUrl = URL(string: urlString) else {
             print("❌ Invalid URL for xgd.io API")
             completion(nil)
             return
         }
         
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+        print("📡 Shortening URL: \(urlString)")
+        
+        let task = URLSession.shared.dataTask(with: requestUrl) { data, response, error in
             if let error = error {
                 print("❌ URL shortening error: \(error.localizedDescription)")
                 completion(nil)
@@ -550,10 +546,9 @@ class SkyscannerURLService {
             let responseString = String(data: data, encoding: .utf8) ?? ""
             print("📊 xgd.io response: \(responseString)")
             
-            // xgd.io returns JSON with "shortUrl" field
-            // Example: {"shortUrl":"https://xgd.io/abc123","originalUrl":"..."}
+            // xgd.ioは小文字の"shorturl"キーで返す（また"shortUrl"も対応）
             if let jsonData = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let shortUrl = jsonData["shortUrl"] as? String {
+               let shortUrl = jsonData["shorturl"] as? String ?? jsonData["shortUrl"] as? String {
                 print("✅ Shortened URL: \(shortUrl)")
                 completion(shortUrl)
                 return

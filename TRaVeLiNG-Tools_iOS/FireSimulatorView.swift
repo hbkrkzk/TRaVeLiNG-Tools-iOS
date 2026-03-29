@@ -94,6 +94,43 @@ struct FireSimulatorView: View {
         simulationData.first(where: { $0.endAssets <= 0 && $0.age > retirementAgeValue })?.age
     }
 
+    private var assetChartSection: some View {
+        Section("資産推移グラフ") {
+            Chart(simulationData) { row in
+                AreaMark(
+                    x: .value("年齢", row.age),
+                    y: .value("総資産", row.endAssets)
+                )
+                .foregroundStyle(
+                    .linearGradient(
+                        colors: [.blue.opacity(0.25), .blue.opacity(0.02)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+
+                LineMark(
+                    x: .value("年齢", row.age),
+                    y: .value("総資産", row.endAssets)
+                )
+                .lineStyle(StrokeStyle(lineWidth: 2.5))
+                .foregroundStyle(.blue)
+            }
+            .frame(height: 220)
+            .chartYAxis {
+                AxisMarks { value in
+                    AxisGridLine()
+                    AxisTick()
+                    AxisValueLabel {
+                        if let amount = value.as(Double.self) {
+                            Text(formatYAxisValue(amount))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     var body: some View {
         Form {
                 Section("シミュレーション条件") {
@@ -133,40 +170,7 @@ struct FireSimulatorView: View {
                     }
                 }
 
-                Section("資産推移グラフ") {
-                    Chart(simulationData) { row in
-                        AreaMark(
-                            x: .value("年齢", row.age),
-                            y: .value("総資産", row.endAssets)
-                        )
-                        .foregroundStyle(
-                            .linearGradient(
-                                colors: [.blue.opacity(0.25), .blue.opacity(0.02)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-
-                        LineMark(
-                            x: .value("年齢", row.age),
-                            y: .value("総資産", row.endAssets)
-                        )
-                        .lineStyle(StrokeStyle(lineWidth: 2.5))
-                        .foregroundStyle(.blue)
-                    }
-                    .frame(height: 220)
-                    .chartYAxis {
-                        AxisMarks { value in
-                            AxisGridLine()
-                            AxisTick()
-                            AxisValueLabel {
-                                if let amount = value.as(Double.self) {
-                                    Text(formatYAxisValue(amount))
-                                }
-                            }
-                        }
-                    }
-                }
+                assetChartSection
 
                 Section("年間推移詳細") {
                     VStack(alignment: .leading, spacing: 8) {
@@ -201,6 +205,7 @@ struct FireSimulatorView: View {
             }
         }
         .navigationTitle("FIRE Simulator")
+        .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -240,34 +245,34 @@ struct FireSimulatorView: View {
             birthYear = birthYear.replacingOccurrences(of: ",", with: "")
             simulationData = buildSimulationData()
         }
-        .onChange(of: birthYear) { _, _ in
+        .onChange(of: birthYear) { _ in
             simulationData = buildSimulationData()
         }
-        .onChange(of: birthMonth) { _, _ in
+        .onChange(of: birthMonth) { _ in
             simulationData = buildSimulationData()
         }
-        .onChange(of: initialCapital) { _, _ in
+        .onChange(of: initialCapital) { _ in
             simulationData = buildSimulationData()
         }
-        .onChange(of: monthlyInvestment) { _, _ in
+        .onChange(of: monthlyInvestment) { _ in
             simulationData = buildSimulationData()
         }
-        .onChange(of: realReturn) { _, _ in
+        .onChange(of: realReturn) { _ in
             simulationData = buildSimulationData()
         }
-        .onChange(of: retirementAge) { _, _ in
+        .onChange(of: retirementAge) { _ in
             simulationData = buildSimulationData()
         }
-        .onChange(of: annualExpensesAfterRetirement) { _, _ in
+        .onChange(of: annualExpensesAfterRetirement) { _ in
             simulationData = buildSimulationData()
         }
-        .onChange(of: usePension) { _, _ in
+        .onChange(of: usePension) { _ in
             simulationData = buildSimulationData()
         }
-        .onChange(of: pensionStartAge) { _, _ in
+        .onChange(of: pensionStartAge) { _ in
             simulationData = buildSimulationData()
         }
-        .onChange(of: annualExpensesAfterPension) { _, _ in
+        .onChange(of: annualExpensesAfterPension) { _ in
             simulationData = buildSimulationData()
         }
     }
