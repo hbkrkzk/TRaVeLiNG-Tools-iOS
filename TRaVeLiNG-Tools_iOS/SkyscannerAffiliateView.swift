@@ -203,54 +203,52 @@ struct SkyscannerAffiliateView: View {
                 
                 self.flightInfo = info
                 
-                var affiliateUrl: String?
-                if info.isRoundTrip, let returnDate = info.returnDate {
-                    affiliateUrl = SkyscannerURLService.generateRoundtripUrl(
-                        departure: info.departure,
-                        arrival: info.arrival,
-                        departDate: info.departureDate,
-                        returnDate: returnDate
-                    )
-                } else {
-                    affiliateUrl = SkyscannerURLService.generateOneWayUrl(
-                        departure: info.departure,
-                        arrival: info.arrival,
-                        departDate: info.departureDate
-                    )
-                }
-                
+                // 直接アフィリエイトURLを生成
+                let affiliateUrl = SkyscannerURLService.generateAffiliateURLDirect(trimmedLink)
                 self.generatedURL = affiliateUrl
-                if let url = affiliateUrl {
-                    let template = info.isRoundTrip
-                        ? ShareTextService.shared.getRoundTripTemplate()
-                        : ShareTextService.shared.getOnewayTemplate()
-                    
-                    self.shareText = template.replacingOccurrences(of: "{URL}", with: url)
-                    
-                    SkyscannerURLService().shortenURL(url) { shortUrl in
-                        DispatchQueue.main.async {
-                            if let shortUrl = shortUrl {
-                                self.shortenedURL = shortUrl
-                                self.shareText = template.replacingOccurrences(of: "{URL}", with: shortUrl)
-                                
-                                if let info = self.flightInfo {
-                                    self.historyManager.addRecord(
-                                        departureCode: info.departure,
-                                        arrivalCode: info.arrival,
-                                        outboundDate: info.departureDate,
-                                        returnDate: info.returnDate,
-                                        shortenedURL: shortUrl,
-                                        affiliateURL: url,
-                                        isRoundTrip: info.isRoundTrip
-                                    )
-                                }
-                            } else {
-                                self.shortenedURL = nil
+                
+                let template = info.isRoundTrip
+                    ? ShareTextService.shared.getRoundTripTemplate()
+                    : ShareTextService.shared.getOnewayTemplate()
+                
+                self.shareText = template.replacingOccurrences(of: "{URL}", with: affiliateUrl)
+                
+                // 短縮URL取得
+                SkyscannerURLService().shortenURL(affiliateUrl) { shortUrl in
+                    DispatchQueue.main.async {
+                        if let shortUrl = shortUrl {
+                            self.shortenedURL = shortUrl
+                            self.shareText = template.replacingOccurrences(of: "{URL}", with: shortUrl)
+                            
+                            if let info = self.flightInfo {
+                                self.historyManager.addRecord(
+                                    departureCode: info.departure,
+                                    arrivalCode: info.arrival,
+                                    outboundDate: info.departureDate,
+                                    returnDate: info.returnDate,
+                                    shortenedURL: shortUrl,
+                                    affiliateURL: affiliateUrl,
+                                    isRoundTrip: info.isRoundTrip
+                                )
+                            }
+                        } else {
+                            self.shortenedURL = affiliateUrl
+                            
+                            if let info = self.flightInfo {
+                                self.historyManager.addRecord(
+                                    departureCode: info.departure,
+                                    arrivalCode: info.arrival,
+                                    outboundDate: info.departureDate,
+                                    returnDate: info.returnDate,
+                                    shortenedURL: affiliateUrl,
+                                    affiliateURL: affiliateUrl,
+                                    isRoundTrip: info.isRoundTrip
+                                )
                             }
                         }
+                        self.isLoading = false
                     }
                 }
-                self.isLoading = false
             }
         }
     }
@@ -540,22 +538,19 @@ struct AffiliateHistoryListView: View {
                         }
                     }.listStyle(.inset)
                 }
-                
-                if !filteredRecords.isEmpty {
-                    Button(action: { recordToDelete = nil; showDeleteConfirm = true }) {
-                        HStack(spacing: 6) { 
-                            Image(systemName: "trash.fill")
-                            Text("すべて削除") 
-                        }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 40)
-                        .background(Color.red.opacity(0.15))
-                        .foregroundStyle(.red)
-                        .font(.callout.weight(.semibold))
-                        .cornerRadius(8)
-                    }.padding(12)
-                }
             }.navigationTitle("生成履歴").navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if !filteredRecords.isEmpty {
+                    Menu {
+                        Button(role: .destructive, action: { recordToDelete = nil; showDeleteConfirm = true }) {
+                            Label("すべて削除", systemImage: "trash.fill")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                }
+            }
         }.toast(message: $showCopyFeedback, color: feedbackColor)
          .alert("削除確認", isPresented: $showDeleteConfirm) {
             Button("キャンセル", role: .cancel) { }
