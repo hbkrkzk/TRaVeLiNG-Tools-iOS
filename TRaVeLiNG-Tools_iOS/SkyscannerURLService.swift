@@ -579,7 +579,7 @@ class SkyscannerURLService {
     /// Skyscanner pxf.io形式を使用：https://skyscanner.pxf.io/c/{campaignId}/{adId}/{programId}?u={encodedURL}
     static func generateAffiliateURLDirect(_ landingPageURL: String) -> String {
         let campaignId = "6120265"
-        let adId = "1457755"
+        let adId = "1027991"
         let programId = "13416"
         
         guard let encodedURL = landingPageURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
