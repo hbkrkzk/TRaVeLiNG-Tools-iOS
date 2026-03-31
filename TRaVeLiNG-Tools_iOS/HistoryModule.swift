@@ -33,6 +33,8 @@ struct AffiliateURLRecord: Identifiable, Codable {
         }
     }
     var directionArrow: String { isRoundTrip ? "⇄" : "→" }
+    var tripTypeLabel: String { isRoundTrip ? "往復" : "片道" }
+    var tripTypeColor: Color { isRoundTrip ? .red : .blue }
     
     private func formatDate(_ dateStr: String) -> String {
         let formatter = DateFormatter()
@@ -136,11 +138,18 @@ struct AffiliateHistoryListView: View {
                                     Text(record.createdDate, style: .date).font(.caption).foregroundStyle(.secondary)
                                     Text(record.createdDate, style: .time).font(.caption).foregroundStyle(.secondary)
                                     Spacer()
+                                    Text(record.tripTypeLabel)
+                                        .font(.caption2.weight(.semibold))
+                                        .padding(.horizontal, 8)
+                                        .frame(height: 22)
+                                        .background(record.tripTypeColor.opacity(0.15))
+                                        .foregroundStyle(record.tripTypeColor)
+                                        .cornerRadius(11)
                                     HStack(spacing: 4) {
                                         Text(record.departureCode).font(.subheadline.weight(.semibold))
                                         Text(record.directionArrow).font(.title3)
                                         Text(record.arrivalCode).font(.subheadline.weight(.semibold))
-                                    }
+                                    }.foregroundStyle(record.tripTypeColor)
                                 }
                                 Text(record.dateDisplayText).font(.caption).foregroundStyle(.secondary)
                                 HStack(spacing: 8) {
