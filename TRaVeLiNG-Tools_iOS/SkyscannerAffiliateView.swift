@@ -192,63 +192,80 @@ struct SkyscannerAffiliateView: View {
         isLoading = true
         errorMessage = nil
         
-        SkyscannerURLService.parseSkyscannerLink(trimmedLink) { info in
-            DispatchQueue.main.async {
-                guard let info = info else {
-                    self.errorMessage = "URLを解析できませんでした"
-                    self.showError = true
-                    self.isLoading = false
+        // async/await で処理を実行
+        Task {
+            do {
+                // URL解析
+                guard let info = await parseSkyscannerLinkAsync(trimmedLink) else {
+                    await MainActor.run {
+                        self.errorMessage = "URLを解析できませんでした"
+                        self.showError = true
+                        self.isLoading = false
+                    }
                     return
                 }
                 
-                self.flightInfo = info
-                
-                // 直接アフィリエイトURLを生成
-                let affiliateUrl = SkyscannerURLService.generateAffiliateURLDirect(trimmedLink)
-                self.generatedURL = affiliateUrl
+                // Impact.com API でアフィリエイトURL生成
+                let affiliateUrl = try await SkyscannerURLService.generateAffiliateURLDirectAsync(trimmedLink)
                 
                 let template = info.isRoundTrip
                     ? ShareTextService.shared.getRoundTripTemplate()
                     : ShareTextService.shared.getOnewayTemplate()
                 
-                self.shareText = template.replacingOccurrences(of: "{URL}", with: affiliateUrl)
-                
                 // 短縮URL取得
-                SkyscannerURLService().shortenURL(affiliateUrl) { shortUrl in
-                    DispatchQueue.main.async {
-                        if let shortUrl = shortUrl {
-                            self.shortenedURL = shortUrl
-                            self.shareText = template.replacingOccurrences(of: "{URL}", with: shortUrl)
-                            
-                            if let info = self.flightInfo {
-                                self.historyManager.addRecord(
-                                    departureCode: info.departure,
-                                    arrivalCode: info.arrival,
-                                    outboundDate: info.departureDate,
-                                    returnDate: info.returnDate,
-                                    shortenedURL: shortUrl,
-                                    affiliateURL: affiliateUrl,
-                                    isRoundTrip: info.isRoundTrip
-                                )
-                            }
-                        } else {
-                            self.shortenedURL = affiliateUrl
-                            
-                            if let info = self.flightInfo {
-                                self.historyManager.addRecord(
-                                    departureCode: info.departure,
-                                    arrivalCode: info.arrival,
-                                    outboundDate: info.departureDate,
-                                    returnDate: info.returnDate,
-                                    shortenedURL: affiliateUrl,
-                                    affiliateURL: affiliateUrl,
-                                    isRoundTrip: info.isRoundTrip
-                                )
-                            }
-                        }
-                        self.isLoading = false
-                    }
+                let shortUrl = await shortenURLAsync(affiliateUrl)
+                
+                await MainActor.run {
+                    self.flightInfo = info
+                    self.generatedURL = affiliateUrl
+                    
+                    let finalUrl = shortUrl ?? affiliateUrl
+                    self.shortenedURL = finalUrl
+                    self.shareText = template.replacingOccurrences(of: "{URL}", with: finalUrl)
+                    
+                    // 履歴に保存
+                    self.historyManager.addRecord(
+                        departureCode: info.departure,
+                        arrivalCode: info.arrival,
+                        outboundDate: info.departureDate,
+                        returnDate: info.returnDate,
+                        shortenedURL: finalUrl,
+                        affiliateURL: affiliateUrl,
+                        isRoundTrip: info.isRoundTrip
+                    )
+                    
+                    self.isLoading = false
                 }
+            } catch let error as ImpactAffiliateService.ImpactError {
+                await MainActor.run {
+                    self.errorMessage = error.localizedDescription
+                    self.showError = true
+                    self.isLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    self.errorMessage = "エラーが発生しました: \(error.localizedDescription)"
+                    self.showError = true
+                    self.isLoading = false
+                }
+            }
+        }
+    }
+    
+    /// URL解析を非同期で実行
+    private func parseSkyscannerLinkAsync(_ link: String) async -> SkyscannerFlightInfo? {
+        return await withCheckedContinuation { continuation in
+            SkyscannerURLService.parseSkyscannerLink(link) { info in
+                continuation.resume(returning: info)
+            }
+        }
+    }
+    
+    /// URL短縮を非同期で実行
+    private func shortenURLAsync(_ url: String) async -> String? {
+        return await withCheckedContinuation { continuation in
+            SkyscannerURLService().shortenURL(url) { shortUrl in
+                continuation.resume(returning: shortUrl)
             }
         }
     }
