@@ -47,6 +47,19 @@ struct ContentView: View {
 
                     NavigationLink {
                         LazyView {
+                            BrownNoisePlayerView()
+                        }
+                    } label: {
+                        ToolCard(
+                            title: "ブラウンノイズ",
+                            subtitle: "ブラウンノイズをループ再生。タイマーとバックグラウンド再生に対応。",
+                            systemImage: "waveform.circle.fill"
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        LazyView {
                             BoardingBarcodeView()
                         }
                     } label: {
