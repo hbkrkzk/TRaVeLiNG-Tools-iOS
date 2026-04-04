@@ -49,6 +49,7 @@ class ImpactAffiliateService {
         case apiError(String)
         case noTrackingURL
         case missingAPICredentials
+        case authenticationFailed(statusCode: Int)
         
         var errorDescription: String? {
             switch self {
@@ -65,7 +66,15 @@ class ImpactAffiliateService {
             case .noTrackingURL:
                 return "トラッキングURLが返されませんでした"
             case .missingAPICredentials:
-                return "API認証情報が設定されていません"
+                return "API認証情報が設定されていません。ImpactConfig.plist または Info.plist に API キーを設定してください"
+            case .authenticationFailed(let statusCode):
+                if statusCode == 401 {
+                    return "API認証エラー (401): APIキーが無効または期限切れの可能性があります。設定を確認してください"
+                } else if statusCode == 403 {
+                    return "API許可エラー (403): このAPIキーには必要な権限がありません"
+                } else {
+                    return "認証エラー: HTTPステータス \(statusCode)"
+                }
             }
         }
     }
@@ -89,6 +98,12 @@ class ImpactAffiliateService {
         // Input validation
         guard !skyscannerLink.isEmpty else {
             throw ImpactError.invalidURL
+        }
+        
+        // Check if API credentials are configured
+        if apiKey.isEmpty || apiSecret.isEmpty {
+            print("⚠️  API credentials not configured. Using fallback affiliate URL generation.")
+            return generateFallbackAffiliateURL(skyscannerLink)
         }
         
         // URL encode the deep link
@@ -124,6 +139,11 @@ class ImpactAffiliateService {
             }
             
             // Check HTTP status
+            if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
+                print("⚠️  API authentication failed with status \(httpResponse.statusCode). Using fallback affiliate URL generation.")
+                throw ImpactError.authenticationFailed(statusCode: httpResponse.statusCode)
+            }
+            
             guard (200...299).contains(httpResponse.statusCode) else {
                 let errorMessage = parseErrorResponse(data)
                 throw ImpactError.apiError("HTTPステータス: \(httpResponse.statusCode) - \(errorMessage)")
@@ -150,6 +170,22 @@ class ImpactAffiliateService {
         } catch {
             throw ImpactError.networkError(error)
         }
+    }
+    
+    // MARK: - Fallback Method
+    
+    /// APIが利用できない場合のフォールバック実装
+    /// Skyscanner pxf.io形式を使用：https://skyscanner.pxf.io/c/{campaignId}/{adId}/{programId}?u={encodedURL}
+    private static func generateFallbackAffiliateURL(_ landingPageURL: String) -> String {
+        let campaignId = "6120265"
+        let adId = "1027991"
+        let programId = "13416"
+        
+        guard let encodedURL = landingPageURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            return landingPageURL
+        }
+        
+        return "https://skyscanner.pxf.io/c/\(campaignId)/\(adId)/\(programId)?u=\(encodedURL)"
     }
     
     // MARK: - Helper Methods

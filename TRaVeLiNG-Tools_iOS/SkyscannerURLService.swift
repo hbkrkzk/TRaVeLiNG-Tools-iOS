@@ -576,26 +576,11 @@ class SkyscannerURLService {
     // MARK: - Direct Affiliate URL Generation
     
     /// Impact.com APIを使用してアフィリエイトURLを生成（推奨）
+    /// APIが利用できない場合は自動的にフォールバック実装を使用します
     /// - Parameter landingPageURL: Skyscanner のランディングページURL
     /// - Returns: vanity形式のトラッキングURL (例: skyscanner.pxf.io/ZVVoQq)
     static func generateAffiliateURLDirectAsync(_ landingPageURL: String) async throws -> String {
         return try await ImpactAffiliateService.generateTrackingLink(skyscannerLink: landingPageURL)
-    }
-    
-    /// ランディングページURLから直接アフィリエイトURLを生成します（レガシー互換性）
-    /// Impact.com APIが利用できない場合のフォールバック実装
-    /// Skyscanner pxf.io形式を使用：https://skyscanner.pxf.io/c/{campaignId}/{adId}/{programId}?u={encodedURL}
-    static func generateAffiliateURLDirect(_ landingPageURL: String) -> String {
-        let campaignId = "6120265"
-        let adId = "1027991"
-        let programId = "13416"
-        
-        guard let encodedURL = landingPageURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            // フォールバック：エンコード失敗時は元のURLを返す
-            return landingPageURL
-        }
-        
-        return "https://skyscanner.pxf.io/c/\(campaignId)/\(adId)/\(programId)?u=\(encodedURL)"
     }
 }
 
