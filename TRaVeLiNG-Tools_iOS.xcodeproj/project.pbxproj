@@ -13,6 +13,7 @@
 		A1B2C3D4E5F6000000000004 /* FireSimulatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000014 /* FireSimulatorView.swift */; };
 		A1B2C3D4E5F6000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000015 /* Assets.xcassets */; };
 		A1B2C3D4E5F6000000000006 /* SkyscannerURLService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000016 /* SkyscannerURLService.swift */; };
+		A1B2C3D4E5F600000000000A /* ImpactAffiliateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F600000000001A /* ImpactAffiliateService.swift */; };
 		A1B2C3D4E5F6000000000007 /* SkyscannerAffiliateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000017 /* SkyscannerAffiliateView.swift */; };
 		A1B2C3D4E5F6000000000008 /* ShareTextService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000018 /* ShareTextService.swift */; };
 /* End PBXBuildFile section */
@@ -25,6 +26,7 @@
 		A1B2C3D4E5F6000000000014 /* FireSimulatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireSimulatorView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000015 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000016 /* SkyscannerURLService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyscannerURLService.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F600000000001A /* ImpactAffiliateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpactAffiliateService.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000017 /* SkyscannerAffiliateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyscannerAffiliateView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000018 /* ShareTextService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareTextService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -56,6 +58,7 @@
 				A1B2C3D4E5F6000000000013 /* BoardingBarcodeView.swift */,
 				A1B2C3D4E5F6000000000014 /* FireSimulatorView.swift */,
 				A1B2C3D4E5F6000000000016 /* SkyscannerURLService.swift */,
+				A1B2C3D4E5F600000000001A /* ImpactAffiliateService.swift */,
 				A1B2C3D4E5F6000000000017 /* SkyscannerAffiliateView.swift */,
 				A1B2C3D4E5F6000000000018 /* ShareTextService.swift */,
 				A1B2C3D4E5F6000000000015 /* Assets.xcassets */,
@@ -145,6 +148,7 @@
 				A1B2C3D4E5F6000000000003 /* BoardingBarcodeView.swift in Sources */,
 				A1B2C3D4E5F6000000000004 /* FireSimulatorView.swift in Sources */,
 				A1B2C3D4E5F6000000000006 /* SkyscannerURLService.swift in Sources */,
+				A1B2C3D4E5F600000000000A /* ImpactAffiliateService.swift in Sources */,
 				A1B2C3D4E5F6000000000007 /* SkyscannerAffiliateView.swift in Sources */,
 				A1B2C3D4E5F6000000000008 /* ShareTextService.swift in Sources */,
 			);
