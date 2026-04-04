@@ -110,8 +110,13 @@ class ImpactAffiliateService {
             let decoder = JSONDecoder()
             let trackingResponse = try decoder.decode(TrackingLinkResponse.self, from: data)
             
-            guard let trackingURL = trackingResponse.trackingURL, !trackingURL.isEmpty else {
+            guard var trackingURL = trackingResponse.trackingURL, !trackingURL.isEmpty else {
                 throw ImpactError.noTrackingURL
+            }
+            
+            // xgd.io など他のサービスに渡すため、完全なURLにしておく
+            if !trackingURL.hasPrefix("http") {
+                trackingURL = "https://" + trackingURL
             }
             
             return trackingURL
