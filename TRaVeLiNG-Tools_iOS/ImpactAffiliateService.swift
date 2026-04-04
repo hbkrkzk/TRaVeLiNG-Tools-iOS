@@ -51,15 +51,9 @@ class ImpactAffiliateService {
     
     private struct TrackingLinkResponse: Codable {
         let trackingURL: String?
-        let TrackingURL: String?
-        
-        var url: String? {
-            return trackingURL ?? TrackingURL
-        }
         
         enum CodingKeys: String, CodingKey {
             case trackingURL = "TrackingURL"
-            case TrackingURL
         }
     }
     
@@ -116,7 +110,7 @@ class ImpactAffiliateService {
             let decoder = JSONDecoder()
             let trackingResponse = try decoder.decode(TrackingLinkResponse.self, from: data)
             
-            guard let trackingURL = trackingResponse.url, !trackingURL.isEmpty else {
+            guard let trackingURL = trackingResponse.trackingURL, !trackingURL.isEmpty else {
                 throw ImpactError.noTrackingURL
             }
             
