@@ -60,6 +60,34 @@ struct ContentView: View {
 
                     NavigationLink {
                         LazyView {
+                            OfflineAIChatView()
+                        }
+                    } label: {
+                        ToolCard(
+                            title: "Offline AI Chat",
+                            subtitle: "",
+                            systemImage: "sparkles",
+                            tag: "AI"
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        LazyView {
+                            OfflineAITranslatorView()
+                        }
+                    } label: {
+                        ToolCard(
+                            title: "Offline AI Translator",
+                            subtitle: "",
+                            systemImage: "globe",
+                            tag: "AI"
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        LazyView {
                             BoardingBarcodeView()
                         }
                     } label: {
@@ -95,30 +123,44 @@ private struct ToolCard: View {
     let title: String
     let subtitle: String
     let systemImage: String
+    let tag: String?
+    
+    init(title: String, subtitle: String, systemImage: String, tag: String? = nil) {
+        self.title = title
+        self.subtitle = subtitle
+        self.systemImage = systemImage
+        self.tag = tag
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        HStack(alignment: .center, spacing: 8) {
             Label(title, systemImage: systemImage)
                 .font(.headline)
                 .foregroundStyle(.primary)
-            if !subtitle.isEmpty {
-                Text(subtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+            
+            if let tag = tag {
+                Text(tag)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.blue)
+                    .cornerRadius(4)
             }
-            HStack {
-                Spacer()
-                Text("このツールを開く")
-                    .font(.footnote.weight(.semibold))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(.blue.opacity(0.15), in: Capsule())
-            }
+            
+            Spacer()
+            
+            Text("開く")
+                .font(.footnote.weight(.semibold))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(.blue.opacity(0.15), in: Capsule())
+                .foregroundColor(.blue)
         }
-        .padding(18)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(Color(.secondarySystemBackground))
         )
     }

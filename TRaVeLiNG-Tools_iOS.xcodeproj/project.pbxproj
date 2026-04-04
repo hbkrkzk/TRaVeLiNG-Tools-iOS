@@ -10,6 +10,11 @@
 		817D66882F80DD64005570C1 /* ImpactConfig.plist in Resources */ = {isa = PBXBuildFile; fileRef = 817D66872F80DD64005570C1 /* ImpactConfig.plist */; };
 		817D668D2F80E055005570C1 /* BrownNoisePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D668C2F80E055005570C1 /* BrownNoisePlayer.swift */; };
 		817D66902F80E19C005570C1 /* brownnoise_30min.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 817D668E2F80E19C005570C1 /* brownnoise_30min.m4a */; };
+		817D66A12F816A74005570C1 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D669B2F816A74005570C1 /* ChatMessage.swift */; };
+		817D66A22F816A74005570C1 /* OfflineAIChatSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D669E2F816A74005570C1 /* OfflineAIChatSettings.swift */; };
+		817D66A32F816A74005570C1 /* OfflineAIChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D669F2F816A74005570C1 /* OfflineAIChatView.swift */; };
+		817D66A42F816A74005570C1 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D669C2F816A74005570C1 /* DesignSystem.swift */; };
+		817D66A62F816E1A005570C1 /* OfflineAITranslatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D66A52F816E1A005570C1 /* OfflineAITranslatorView.swift */; };
 		A1B2C3D4E5F6000000000001 /* TRaVeLiNG_Tools_iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000011 /* TRaVeLiNG_Tools_iOSApp.swift */; };
 		A1B2C3D4E5F6000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000012 /* ContentView.swift */; };
 		A1B2C3D4E5F6000000000003 /* BoardingBarcodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000013 /* BoardingBarcodeView.swift */; };
@@ -26,6 +31,11 @@
 		817D66892F80DE1E005570C1 /* TRaVeLiNG-Tools-iOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "TRaVeLiNG-Tools-iOS-Info.plist"; sourceTree = SOURCE_ROOT; };
 		817D668C2F80E055005570C1 /* BrownNoisePlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrownNoisePlayer.swift; sourceTree = "<group>"; };
 		817D668E2F80E19C005570C1 /* brownnoise_30min.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = brownnoise_30min.m4a; sourceTree = "<group>"; };
+		817D669B2F816A74005570C1 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		817D669C2F816A74005570C1 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		817D669E2F816A74005570C1 /* OfflineAIChatSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineAIChatSettings.swift; sourceTree = "<group>"; };
+		817D669F2F816A74005570C1 /* OfflineAIChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineAIChatView.swift; sourceTree = "<group>"; };
+		817D66A52F816E1A005570C1 /* OfflineAITranslatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineAITranslatorView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000010 /* TRaVeLiNG-Tools_iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TRaVeLiNG-Tools_iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1B2C3D4E5F6000000000011 /* TRaVeLiNG_Tools_iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRaVeLiNG_Tools_iOSApp.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -68,6 +78,11 @@
 		A1B2C3D4E5F6000000000031 /* TRaVeLiNG-Tools_iOS */ = {
 			isa = PBXGroup;
 			children = (
+				817D66A52F816E1A005570C1 /* OfflineAITranslatorView.swift */,
+				817D669B2F816A74005570C1 /* ChatMessage.swift */,
+				817D669C2F816A74005570C1 /* DesignSystem.swift */,
+				817D669E2F816A74005570C1 /* OfflineAIChatSettings.swift */,
+				817D669F2F816A74005570C1 /* OfflineAIChatView.swift */,
 				817D668F2F80E19C005570C1 /* Resources */,
 				817D668C2F80E055005570C1 /* BrownNoisePlayer.swift */,
 				817D66892F80DE1E005570C1 /* TRaVeLiNG-Tools-iOS-Info.plist */,
@@ -164,7 +179,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				817D66A62F816E1A005570C1 /* OfflineAITranslatorView.swift in Sources */,
 				A1B2C3D4E5F6000000000001 /* TRaVeLiNG_Tools_iOSApp.swift in Sources */,
+				817D66A12F816A74005570C1 /* ChatMessage.swift in Sources */,
+				817D66A22F816A74005570C1 /* OfflineAIChatSettings.swift in Sources */,
+				817D66A32F816A74005570C1 /* OfflineAIChatView.swift in Sources */,
+				817D66A42F816A74005570C1 /* DesignSystem.swift in Sources */,
 				817D668D2F80E055005570C1 /* BrownNoisePlayer.swift in Sources */,
 				A1B2C3D4E5F6000000000002 /* ContentView.swift in Sources */,
 				A1B2C3D4E5F6000000000003 /* BoardingBarcodeView.swift in Sources */,
@@ -278,8 +298,8 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -309,8 +329,8 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

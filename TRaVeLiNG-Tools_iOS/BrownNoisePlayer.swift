@@ -197,7 +197,7 @@ class BrownNoisePlayerService: NSObject, ObservableObject {
     }
     
     @objc private func updateDisplay() {
-        guard let audioPlayer = audioPlayer, isPlaying else {
+        guard audioPlayer != nil, isPlaying else {
             displayLink?.invalidate()
             displayLink = nil
             return

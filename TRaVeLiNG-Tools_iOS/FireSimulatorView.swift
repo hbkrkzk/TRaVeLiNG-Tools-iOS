@@ -245,34 +245,34 @@ struct FireSimulatorView: View {
             birthYear = birthYear.replacingOccurrences(of: ",", with: "")
             simulationData = buildSimulationData()
         }
-        .onChange(of: birthYear) { _ in
+        .onChange(of: birthYear) {
             simulationData = buildSimulationData()
         }
-        .onChange(of: birthMonth) { _ in
+        .onChange(of: birthMonth) {
             simulationData = buildSimulationData()
         }
-        .onChange(of: initialCapital) { _ in
+        .onChange(of: initialCapital) {
             simulationData = buildSimulationData()
         }
-        .onChange(of: monthlyInvestment) { _ in
+        .onChange(of: monthlyInvestment) {
             simulationData = buildSimulationData()
         }
-        .onChange(of: realReturn) { _ in
+        .onChange(of: realReturn) {
             simulationData = buildSimulationData()
         }
-        .onChange(of: retirementAge) { _ in
+        .onChange(of: retirementAge) {
             simulationData = buildSimulationData()
         }
-        .onChange(of: annualExpensesAfterRetirement) { _ in
+        .onChange(of: annualExpensesAfterRetirement) {
             simulationData = buildSimulationData()
         }
-        .onChange(of: usePension) { _ in
+        .onChange(of: usePension) {
             simulationData = buildSimulationData()
         }
-        .onChange(of: pensionStartAge) { _ in
+        .onChange(of: pensionStartAge) {
             simulationData = buildSimulationData()
         }
-        .onChange(of: annualExpensesAfterPension) { _ in
+        .onChange(of: annualExpensesAfterPension) {
             simulationData = buildSimulationData()
         }
     }

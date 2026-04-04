@@ -78,26 +78,26 @@ struct BoardingBarcodeView: View {
     private var flightInfoSection: some View {
         Section("区間・便情報") {
             LabeledInputField(title: "出発地", text: $from, example: "HND", field: .from, focusedField: $focusedField)
-                .onChange(of: from) { newValue in
-                    from = String(newValue.uppercased().prefix(3))
+                .onChange(of: from) {
+                    from = String(from.uppercased().prefix(3))
                 }
 
             LabeledInputField(title: "到着地", text: $to, example: "NYC", field: .to, focusedField: $focusedField)
-                .onChange(of: to) { newValue in
-                    to = String(newValue.uppercased().prefix(3))
+                .onChange(of: to) {
+                    to = String(to.uppercased().prefix(3))
                 }
 
             LabeledInputField(title: "運航会社コード", text: $operatorCode, example: "NH", field: .operatorCode, focusedField: $focusedField)
-                .onChange(of: operatorCode) { newValue in
-                    operatorCode = String(newValue.uppercased().prefix(3))
+                .onChange(of: operatorCode) {
+                    operatorCode = String(operatorCode.uppercased().prefix(3))
                 }
 
             let flightView = LabeledInputField(title: "便名", text: $flightNum, example: "001", field: .flightNum, focusedField: $focusedField)
             let flightWithKeyboard = flightView.keyboardType(.numbersAndPunctuation)
             
             flightWithKeyboard
-                .onChange(of: flightNum) { newValue in
-                    flightNum = String(newValue.prefix(5))
+                .onChange(of: flightNum) {
+                    flightNum = String(flightNum.prefix(5))
                 }
 
             DatePicker("出発日", selection: departureDateBinding, displayedComponents: .date)
@@ -113,8 +113,8 @@ struct BoardingBarcodeView: View {
             }
 
             LabeledInputField(title: "座席番号", text: $seat, example: "23A", field: .seat, focusedField: $focusedField)
-                .onChange(of: seat) { newValue in
-                    seat = String(newValue.uppercased().prefix(4))
+                .onChange(of: seat) {
+                    seat = String(seat.uppercased().prefix(4))
                 }
         }
     }
@@ -122,16 +122,16 @@ struct BoardingBarcodeView: View {
     private var referenceInfoSection: some View {
         Section("参照情報") {
             LabeledInputField(title: "PNR", text: $bookingRef, example: "ABC123", field: .bookingRef, focusedField: $focusedField)
-                .onChange(of: bookingRef) { newValue in
-                    bookingRef = String(newValue.uppercased().prefix(7))
+                .onChange(of: bookingRef) {
+                    bookingRef = String(bookingRef.uppercased().prefix(7))
                 }
 
             let boardingView = LabeledInputField(title: "搭乗インデックス", text: $boardingIndex, example: "12", field: .boardingIndex, focusedField: $focusedField)
             let boardingWithKeyboard = boardingView.keyboardType(.numberPad)
             
             boardingWithKeyboard
-                .onChange(of: boardingIndex) { newValue in
-                    boardingIndex = String(newValue.prefix(4))
+                .onChange(of: boardingIndex) {
+                    boardingIndex = String(boardingIndex.prefix(4))
                 }
         }
     }
@@ -168,13 +168,13 @@ struct BoardingBarcodeView: View {
 
             Section("乗客情報") {
                 LabeledInputField(title: "名", text: $firstName, example: "John", field: .firstName, focusedField: $focusedField)
-                    .onChange(of: firstName) { newValue in
-                        firstName = newValue.uppercased()
+                    .onChange(of: firstName) {
+                        firstName = firstName.uppercased()
                     }
 
                 LabeledInputField(title: "姓", text: $lastName, example: "Smith", field: .lastName, focusedField: $focusedField)
-                    .onChange(of: lastName) { newValue in
-                        lastName = newValue.uppercased()
+                    .onChange(of: lastName) {
+                        lastName = lastName.uppercased()
                     }
             }
 
@@ -251,10 +251,10 @@ struct BoardingBarcodeView: View {
                 updateBarcodeImage()
             }
         }
-        .onChange(of: rawData) { _ in
+        .onChange(of: rawData) {
             updateBarcodeImage()
         }
-        .onChange(of: codeTypeRaw) { _ in
+        .onChange(of: codeTypeRaw) {
             updateBarcodeImage()
         }
     }
