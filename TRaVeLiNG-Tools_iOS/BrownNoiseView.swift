@@ -1,17 +1,15 @@
 import SwiftUI
 
 struct BrownNoiseView: View {
-    var player = BrownNoisePlayer.shared
     @AppStorage("brownNoise_volume") private var savedVolume: Float = 0.5
     @AppStorage("brownNoise_timerMinutes") private var timerMinutes: Int = 0
     @State private var showTimerPicker = false
-    @State private var isPlaying = false
-    @State private var volume: Float = 0.5
-    @State private var timerDuration: TimeInterval = 0
-    @State private var timeRemaining: TimeInterval = 0
+    @State private var refreshTrigger = UUID()
     
     var body: some View {
-        ScrollView {
+        let player = BrownNoisePlayer.shared
+        
+        return ScrollView {
             VStack(spacing: 20) {
                 // Header
                 VStack(spacing: 8) {
@@ -38,17 +36,17 @@ struct BrownNoiseView: View {
                     VStack(spacing: 12) {
                         HStack(spacing: 12) {
                             Button(action: {
-                                if isPlaying {
+                                if player.isPlaying {
                                     player.pause()
                                 } else {
                                     player.play()
                                 }
-                                observePlayer()
+                                refreshTrigger = UUID()
                             }) {
                                 HStack(spacing: 8) {
-                                    Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                                    Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                                         .font(.system(size: 16, weight: .semibold))
-                                    Text(isPlaying ? "一時停止" : "再生")
+                                    Text(player.isPlaying ? "一時停止" : "再生")
                                         .font(.system(.body, design: .rounded))
                                         .fontWeight(.semibold)
                                 }
@@ -61,7 +59,7 @@ struct BrownNoiseView: View {
                             
                             Button(action: {
                                 player.stop()
-                                observePlayer()
+                                refreshTrigger = UUID()
                             }) {
                                 HStack(spacing: 8) {
                                     Image(systemName: "stop.fill")
@@ -81,17 +79,17 @@ struct BrownNoiseView: View {
                         // Status indicator
                         HStack(spacing: 8) {
                             Circle()
-                                .fill(isPlaying ? Color.green : Color.gray)
+                                .fill(player.isPlaying ? Color.green : Color.gray)
                                 .frame(width: 8, height: 8)
                             
-                            Text(isPlaying ? "再生中" : "停止中")
+                            Text(player.isPlaying ? "再生中" : "停止中")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             
                             Spacer()
                             
-                            if isPlaying && timerDuration > 0 {
-                                Text(formatTime(timeRemaining))
+                            if player.isPlaying && player.timerDuration > 0 {
+                                Text(formatTime(player.timeRemaining))
                                     .font(.caption.monospacedDigit())
                                     .foregroundStyle(.secondary)
                             }
@@ -117,17 +115,19 @@ struct BrownNoiseView: View {
                             Image(systemName: "speaker.fill")
                                 .foregroundStyle(.secondary)
                             
-                            Slider(value: $volume, in: 0...1)
-                                .onChange(of: volume) { _, newValue in
+                            Slider(value: Binding(
+                                get: { player.volume },
+                                set: { newValue in
                                     player.volume = newValue
                                     savedVolume = newValue
                                 }
+                            ), in: 0...1)
                             
                             Image(systemName: "speaker.wave.3.fill")
                                 .foregroundStyle(.secondary)
                         }
                         
-                        Text("\(Int(volume * 100))%")
+                        Text("\(Int(player.volume * 100))%")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .center)
@@ -214,24 +214,13 @@ struct BrownNoiseView: View {
         .onAppear {
             player.volume = savedVolume
             player.timerDuration = TimeInterval(timerMinutes * 60)
-            observePlayer()
         }
-        .onReceive(Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()) { _ in
-            observePlayer()
-        }
-    }
-    
-    private func observePlayer() {
-        isPlaying = player.isPlaying
-        volume = player.volume
-        timerDuration = player.timerDuration
-        timeRemaining = player.timeRemaining
-    }
         .sheet(isPresented: $showTimerPicker) {
             TimerPickerSheet(minutes: $timerMinutes, player: player)
         }
         .navigationTitle("Brown Noise")
         .navigationBarTitleDisplayMode(.inline)
+        .id(refreshTrigger)
     }
     
     private func formatTime(_ seconds: TimeInterval) -> String {
