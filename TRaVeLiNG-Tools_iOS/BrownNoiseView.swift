@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct BrownNoiseView: View {
-    @ObservedObject var player = BrownNoisePlayer.shared
+    @State private var player = BrownNoisePlayer.shared
     @AppStorage("brownNoise_volume") private var savedVolume: Float = 0.5
     @AppStorage("brownNoise_timerMinutes") private var timerMinutes: Int = 0
     @State private var showTimerPicker = false
@@ -26,30 +26,50 @@ struct BrownNoiseView: View {
                 .padding(.vertical, 20)
                 
                 // Playback Controls Section
-                ToolSection("再生コントロール") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("再生コントロール")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    
                     VStack(spacing: 12) {
                         HStack(spacing: 12) {
-                            ToolButton(
-                                title: player.isPlaying ? "一時停止" : "再生",
-                                icon: player.isPlaying ? "pause.fill" : "play.fill",
-                                action: {
-                                    if player.isPlaying {
-                                        player.pause()
-                                    } else {
-                                        player.play()
-                                    }
-                                },
-                                color: .blue
-                            )
+                            Button(action: {
+                                if player.isPlaying {
+                                    player.pause()
+                                } else {
+                                    player.play()
+                                }
+                            }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+                                    Text(player.isPlaying ? "一時停止" : "再生")
+                                        .font(.system(.body, design: .rounded))
+                                        .fontWeight(.semibold)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 48)
+                                .background(.blue)
+                                .foregroundStyle(.white)
+                                .cornerRadius(12)
+                            }
                             
-                            ToolButton(
-                                title: "停止",
-                                icon: "stop.fill",
-                                action: {
-                                    player.stop()
-                                },
-                                color: .red
-                            )
+                            Button(action: {
+                                player.stop()
+                            }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "stop.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+                                    Text("停止")
+                                        .font(.system(.body, design: .rounded))
+                                        .fontWeight(.semibold)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 48)
+                                .background(.red)
+                                .foregroundStyle(.white)
+                                .cornerRadius(12)
+                            }
                         }
                         
                         // Status indicator
@@ -72,10 +92,20 @@ struct BrownNoiseView: View {
                         }
                         .padding(.horizontal, 4)
                     }
+                    .padding(12)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
                 }
+                .padding(12)
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
                 
                 // Volume Control Section
-                ToolSection("ボリューム") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("ボリューム")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    
                     VStack(spacing: 12) {
                         HStack(spacing: 12) {
                             Image(systemName: "speaker.fill")
@@ -95,10 +125,20 @@ struct BrownNoiseView: View {
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .center)
                     }
+                    .padding(12)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
                 }
+                .padding(12)
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
                 
                 // Timer Section
-                ToolSection("タイマー") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("タイマー")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    
                     VStack(spacing: 12) {
                         Button(action: { showTimerPicker.toggle() }) {
                             HStack(spacing: 12) {
@@ -132,16 +172,32 @@ struct BrownNoiseView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
+                    .padding(12)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
                 }
+                .padding(12)
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
                 
                 // Info Section
-                ToolSection("情報") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("情報")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    
                     VStack(alignment: .leading, spacing: 10) {
                         InfoRow(icon: "info.circle", title: "バックグラウンド再生", value: "有効")
                         InfoRow(icon: "phone", title: "通話割り込み", value: "対応済み")
                         InfoRow(icon: "lock", title: "デバイスロック中", value: "再生継続")
                     }
+                    .padding(12)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
                 }
+                .padding(12)
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
                 
                 Spacer()
             }
@@ -150,6 +206,7 @@ struct BrownNoiseView: View {
         }
         .onAppear {
             player.volume = savedVolume
+            player.timerDuration = TimeInterval(timerMinutes * 60)
         }
         .sheet(isPresented: $showTimerPicker) {
             TimerPickerSheet(minutes: $timerMinutes, player: player)
@@ -217,13 +274,17 @@ struct TimerPickerSheet: View {
                 }
                 .pickerStyle(.wheel)
                 
-                ToolButton(
-                    title: "完了",
-                    action: {
-                        player.timerDuration = TimeInterval(minutes * 60)
-                        dismiss()
-                    }
-                )
+                Button(action: {
+                    player.timerDuration = TimeInterval(minutes * 60)
+                    dismiss()
+                }) {
+                    Text("完了")
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .background(.blue)
+                        .foregroundStyle(.white)
+                        .cornerRadius(12)
+                }
                 
                 Spacer()
             }
@@ -237,6 +298,5 @@ struct TimerPickerSheet: View {
 #Preview {
     NavigationStack {
         BrownNoiseView()
-            .environmentObject(BrownNoisePlayer.shared)
     }
 }
