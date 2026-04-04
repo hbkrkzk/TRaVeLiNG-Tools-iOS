@@ -34,19 +34,6 @@ struct ContentView: View {
 
                     NavigationLink {
                         LazyView {
-                            BrownNoiseView()
-                        }
-                    } label: {
-                        ToolCard(
-                            title: "Brown Noise",
-                            subtitle: "ブラウンノイズを再生してフォーカス、睡眠、リラックスをサポート。バックグラウンド再生対応。",
-                            systemImage: "waveform.circle.fill"
-                        )
-                    }
-                    .buttonStyle(.plain)
-
-                    NavigationLink {
-                        LazyView {
                             SkyscannerAffiliateView()
                         }
                     } label: {
@@ -54,6 +41,19 @@ struct ContentView: View {
                             title: "Skyscanner Link",
                             subtitle: "Skyscannerの検索リンクからアフィリエイトリンクを生成・短縮します。",
                             systemImage: "link.circle.fill"
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        LazyView {
+                            BrownNoiseView()
+                        }
+                    } label: {
+                        ToolCard(
+                            title: "Brown Noise",
+                            subtitle: "ブラウンノイズを再生してフォーカス、睡眠、リラックスをサポート。バックグラウンド再生対応。",
+                            systemImage: "waveform.circle.fill"
                         )
                     }
                     .buttonStyle(.plain)

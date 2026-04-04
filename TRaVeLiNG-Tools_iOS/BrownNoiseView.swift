@@ -2,12 +2,12 @@ import SwiftUI
 
 struct BrownNoiseView: View {
     @State private var showTimerPicker = false
+    @State private var timerStarted = false
+    @State private var displayVolume: Float = 0.5
     @State private var refreshTrigger = UUID()
     
     var body: some View {
         let player = BrownNoisePlayer.shared
-        let savedVolume = UserDefaults.standard.float(forKey: "brownNoise_volume")
-        let actualVolume = savedVolume > 0 ? savedVolume : 0.5
         let timerMinutes = UserDefaults.standard.integer(forKey: "brownNoise_timerMinutes")
         
         return ScrollView {
@@ -60,6 +60,7 @@ struct BrownNoiseView: View {
                             
                             Button(action: {
                                 player.stop()
+                                timerStarted = false
                                 refreshTrigger = UUID()
                             }) {
                                 HStack(spacing: 8) {
@@ -89,7 +90,7 @@ struct BrownNoiseView: View {
                             
                             Spacer()
                             
-                            if player.isPlaying && player.timerDuration > 0 {
+                            if player.isPlaying && timerStarted && player.timerDuration > 0 {
                                 Text(formatTime(player.timeRemaining))
                                     .font(.caption.monospacedDigit())
                                     .foregroundStyle(.secondary)
@@ -120,7 +121,9 @@ struct BrownNoiseView: View {
                                 get: { player.volume },
                                 set: { newValue in
                                     player.volume = newValue
+                                    displayVolume = newValue
                                     UserDefaults.standard.set(newValue, forKey: "brownNoise_volume")
+                                    refreshTrigger = UUID()
                                 }
                             ), in: 0...1)
                             
@@ -128,10 +131,11 @@ struct BrownNoiseView: View {
                                 .foregroundStyle(.secondary)
                         }
                         
-                        Text("\(Int(player.volume * 100))%")
+                        Text("\(Int(displayVolume * 100))%")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .center)
+                            .id(refreshTrigger)
                     }
                     .padding(12)
                     .background(Color(.systemGray6))
@@ -154,11 +158,11 @@ struct BrownNoiseView: View {
                                     .foregroundStyle(.blue)
                                 
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("タイマー")
+                                    Text("タイマー設定")
                                         .font(.subheadline)
                                         .foregroundStyle(.secondary)
                                     
-                                    Text(timerMinutes == 0 ? "なし" : "\(timerMinutes) 分")
+                                    Text(timerMinutes == 0 ? "なし" : formatTimerDisplay(timerMinutes))
                                         .font(.body.weight(.semibold))
                                         .foregroundStyle(.primary)
                                 }
@@ -173,31 +177,61 @@ struct BrownNoiseView: View {
                             .cornerRadius(8)
                         }
                         
-                        if timerMinutes > 0 {
-                            Text("指定時間後に自動停止します")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                        // Start Timer Button
+                        if timerMinutes > 0 && !timerStarted {
+                            Button(action: {
+                                player.timerDuration = TimeInterval(timerMinutes * 60)
+                                timerStarted = true
+                                if !player.isPlaying {
+                                    player.play()
+                                }
+                                refreshTrigger = UUID()
+                            }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "play.fill")
+                                        .font(.system(size: 14, weight: .semibold))
+                                    Text("タイマーをスタート")
+                                        .font(.system(.body, design: .rounded))
+                                        .fontWeight(.semibold)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                                .background(.green)
+                                .foregroundStyle(.white)
+                                .cornerRadius(8)
+                            }
                         }
-                    }
-                    .padding(12)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
-                }
-                .padding(12)
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
-                
-                // Info Section
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("情報")
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-                    
-                    VStack(alignment: .leading, spacing: 10) {
-                        InfoRow(icon: "info.circle", title: "バックグラウンド再生", value: "有効")
-                        InfoRow(icon: "phone", title: "通話割り込み", value: "対応済み")
-                        InfoRow(icon: "lock", title: "デバイスロック中", value: "再生継続")
+                        
+                        if timerStarted && player.timerDuration > 0 {
+                            VStack(spacing: 8) {
+                                HStack {
+                                    Text("残り時間:")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Spacer()
+                                    Text(formatTime(player.timeRemaining))
+                                        .font(.caption.monospacedDigit().weight(.semibold))
+                                        .foregroundStyle(.blue)
+                                }
+                                
+                                Button(action: {
+                                    player.timerDuration = 0
+                                    timerStarted = false
+                                    refreshTrigger = UUID()
+                                }) {
+                                    Text("タイマーをキャンセル")
+                                        .font(.caption.weight(.semibold))
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: 36)
+                                        .background(.gray.opacity(0.3))
+                                        .foregroundStyle(.red)
+                                        .cornerRadius(6)
+                                }
+                            }
+                            .padding(10)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                        }
                     }
                     .padding(12)
                     .background(Color(.systemGray6))
@@ -213,11 +247,17 @@ struct BrownNoiseView: View {
             .padding(.vertical, 12)
         }
         .onAppear {
-            player.volume = actualVolume
-            player.timerDuration = TimeInterval(timerMinutes * 60)
+            player.volume = UserDefaults.standard.float(forKey: "brownNoise_volume")
+            if player.volume == 0 {
+                player.volume = 0.5
+            }
+            displayVolume = player.volume
         }
         .sheet(isPresented: $showTimerPicker) {
-            TimerPickerSheet(player: player)
+            TimerPickerSheet(player: player) {
+                timerStarted = false
+                refreshTrigger = UUID()
+            }
         }
         .navigationTitle("Brown Noise")
         .navigationBarTitleDisplayMode(.inline)
@@ -225,40 +265,29 @@ struct BrownNoiseView: View {
     }
     
     private func formatTime(_ seconds: TimeInterval) -> String {
-        let minutes = Int(seconds) / 60
+        let hours = Int(seconds) / 3600
+        let minutes = (Int(seconds) % 3600) / 60
         let secs = Int(seconds) % 60
-        return String(format: "%02d:%02d", minutes, secs)
-    }
-}
-
-// MARK: - Supporting Views
-
-struct InfoRow: View {
-    let icon: String
-    let title: String
-    let value: String
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundStyle(.blue)
-                .frame(width: 24)
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            
-            Spacer()
-            
-            Text(value)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.primary)
+        
+        if hours > 0 {
+            return String(format: "%02d:%02d:%02d", hours, minutes, secs)
+        } else {
+            return String(format: "%02d:%02d", minutes, secs)
         }
-        .padding(10)
-        .background(Color(.systemGray6))
-        .cornerRadius(8)
+    }
+    
+    private func formatTimerDisplay(_ minutes: Int) -> String {
+        if minutes < 60 {
+            return "\(minutes) 分"
+        } else if minutes == 60 {
+            return "1 時間"
+        } else if minutes % 60 == 0 {
+            return "\(minutes / 60) 時間"
+        } else {
+            let hours = minutes / 60
+            let mins = minutes % 60
+            return "\(hours) 時間 \(mins) 分"
+        }
     }
 }
 
@@ -266,8 +295,20 @@ struct TimerPickerSheet: View {
     @State private var selectedMinutes = 0
     @Environment(\.dismiss) var dismiss
     var player: BrownNoisePlayer
+    var onDismiss: () -> Void = {}
     
-    let timerOptions = [0, 5, 10, 15, 30, 45, 60, 90, 120]
+    var timerOptions: [Int] {
+        var options: [Int] = []
+        // 0 to 120 min (2 hours) in 5 min increments
+        for i in stride(from: 0, through: 120, by: 5) {
+            options.append(i)
+        }
+        // 2.5 hours to 12 hours in 30 min increments
+        for i in stride(from: 150, through: 720, by: 30) {
+            options.append(i)
+        }
+        return options
+    }
     
     var body: some View {
         NavigationStack {
@@ -276,8 +317,16 @@ struct TimerPickerSheet: View {
                     ForEach(timerOptions, id: \.self) { option in
                         if option == 0 {
                             Text("なし").tag(option)
-                        } else {
+                        } else if option < 60 {
                             Text("\(option) 分").tag(option)
+                        } else if option == 60 {
+                            Text("1 時間").tag(option)
+                        } else if option % 60 == 0 {
+                            Text("\(option / 60) 時間").tag(option)
+                        } else {
+                            let hours = option / 60
+                            let mins = option % 60
+                            Text("\(hours)h \(mins)m").tag(option)
                         }
                     }
                 }
@@ -285,7 +334,7 @@ struct TimerPickerSheet: View {
                 
                 Button(action: {
                     UserDefaults.standard.set(selectedMinutes, forKey: "brownNoise_timerMinutes")
-                    player.timerDuration = TimeInterval(selectedMinutes * 60)
+                    onDismiss()
                     dismiss()
                 }) {
                     Text("完了")
