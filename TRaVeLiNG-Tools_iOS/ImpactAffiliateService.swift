@@ -2,11 +2,12 @@ import Foundation
 
 class ImpactAffiliateService {
     // MARK: - Impact.com API Configuration
+    // Credentials are loaded from Config.xcconfig at build time
     
-    private static let partnerID = "***REMOVED***"
-    private static let apiKey = "***REMOVED***"
-    private static let apiSecret = "***REMOVED***"
-    private static let programID = "13416"
+    private static let partnerID = Bundle.main.infoDictionary?["IMPACT_PARTNER_ID"] as? String ?? ""
+    private static let apiKey = Bundle.main.infoDictionary?["IMPACT_API_KEY"] as? String ?? ""
+    private static let apiSecret = Bundle.main.infoDictionary?["IMPACT_API_SECRET"] as? String ?? ""
+    private static let programID = Bundle.main.infoDictionary?["IMPACT_PROGRAM_ID"] as? String ?? ""
     private static let baseURL = "https://api.impact.com/Mediapartners"
     
     private static let session: URLSession = {
