@@ -1,13 +1,14 @@
 import SwiftUI
 
 struct BrownNoiseView: View {
-    @AppStorage("brownNoise_volume") private var savedVolume: Float = 0.5
-    @AppStorage("brownNoise_timerMinutes") private var timerMinutes: Int = 0
     @State private var showTimerPicker = false
     @State private var refreshTrigger = UUID()
     
     var body: some View {
         let player = BrownNoisePlayer.shared
+        let savedVolume = UserDefaults.standard.float(forKey: "brownNoise_volume")
+        let actualVolume = savedVolume > 0 ? savedVolume : 0.5
+        let timerMinutes = UserDefaults.standard.integer(forKey: "brownNoise_timerMinutes")
         
         return ScrollView {
             VStack(spacing: 20) {
@@ -119,7 +120,7 @@ struct BrownNoiseView: View {
                                 get: { player.volume },
                                 set: { newValue in
                                     player.volume = newValue
-                                    savedVolume = newValue
+                                    UserDefaults.standard.set(newValue, forKey: "brownNoise_volume")
                                 }
                             ), in: 0...1)
                             
@@ -212,11 +213,11 @@ struct BrownNoiseView: View {
             .padding(.vertical, 12)
         }
         .onAppear {
-            player.volume = savedVolume
+            player.volume = actualVolume
             player.timerDuration = TimeInterval(timerMinutes * 60)
         }
         .sheet(isPresented: $showTimerPicker) {
-            TimerPickerSheet(minutes: $timerMinutes, player: player)
+            TimerPickerSheet(player: player)
         }
         .navigationTitle("Brown Noise")
         .navigationBarTitleDisplayMode(.inline)
@@ -262,7 +263,7 @@ struct InfoRow: View {
 }
 
 struct TimerPickerSheet: View {
-    @Binding var minutes: Int
+    @State private var selectedMinutes = 0
     @Environment(\.dismiss) var dismiss
     var player: BrownNoisePlayer
     
@@ -271,7 +272,7 @@ struct TimerPickerSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
-                Picker("タイマー時間", selection: $minutes) {
+                Picker("タイマー時間", selection: $selectedMinutes) {
                     ForEach(timerOptions, id: \.self) { option in
                         if option == 0 {
                             Text("なし").tag(option)
@@ -283,7 +284,8 @@ struct TimerPickerSheet: View {
                 .pickerStyle(.wheel)
                 
                 Button(action: {
-                    player.timerDuration = TimeInterval(minutes * 60)
+                    UserDefaults.standard.set(selectedMinutes, forKey: "brownNoise_timerMinutes")
+                    player.timerDuration = TimeInterval(selectedMinutes * 60)
                     dismiss()
                 }) {
                     Text("完了")
