@@ -1,5 +1,6 @@
 import AVFoundation
 import Combine
+import UIKit
 
 class BrownNoisePlayer: NSObject, ObservableObject {
     static let shared = BrownNoisePlayer()
@@ -10,17 +11,19 @@ class BrownNoisePlayer: NSObject, ObservableObject {
             player?.volume = volume
         }
     }
-    @Published var timerDuration: TimeInterval = 0 // 0 means no timer
+    @Published var timerDuration: TimeInterval = 0
     @Published var timeRemaining: TimeInterval = 0
     
     private var player: AVPlayer?
     private var timeObserver: Any?
     private var timerTask: DispatchSourceTimer?
+    private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
     override init() {
         super.init()
         setupAudioSession()
         setupNotifications()
+        setupBackgroundPlayback()
     }
     
     deinit {
@@ -50,6 +53,41 @@ class BrownNoisePlayer: NSObject, ObservableObject {
             name: AVAudioSession.interruptionNotification,
             object: AVAudioSession.sharedInstance()
         )
+    }
+    
+    private func setupBackgroundPlayback() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAppDidEnterBackground),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAppDidBecomeActive),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+    }
+    
+    @objc private func handleAppDidEnterBackground() {
+        if isPlaying {
+            backgroundTask = UIApplication.shared.beginBackgroundTask { [weak self] in
+                self?.endBackgroundTask()
+            }
+        }
+    }
+    
+    @objc private func handleAppDidBecomeActive() {
+        endBackgroundTask()
+    }
+    
+    private func endBackgroundTask() {
+        if backgroundTask != .invalid {
+            UIApplication.shared.endBackgroundTask(backgroundTask)
+            backgroundTask = .invalid
+        }
     }
     
     // MARK: - Playback Control
