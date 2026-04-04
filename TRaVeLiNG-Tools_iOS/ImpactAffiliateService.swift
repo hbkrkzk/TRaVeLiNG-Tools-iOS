@@ -2,13 +2,35 @@ import Foundation
 
 class ImpactAffiliateService {
     // MARK: - Impact.com API Configuration
-    // Credentials are loaded from Config.xcconfig at build time
     
-    private static let partnerID = Bundle.main.infoDictionary?["IMPACT_PARTNER_ID"] as? String ?? ""
-    private static let apiKey = Bundle.main.infoDictionary?["IMPACT_API_KEY"] as? String ?? ""
-    private static let apiSecret = Bundle.main.infoDictionary?["IMPACT_API_SECRET"] as? String ?? ""
-    private static let programID = Bundle.main.infoDictionary?["IMPACT_PROGRAM_ID"] as? String ?? ""
+    private static let (partnerID, apiKey, apiSecret, programID) = loadCredentials()
     private static let baseURL = "https://api.impact.com/Mediapartners"
+    
+    private static func loadCredentials() -> (String, String, String, String) {
+        // Try to load from ImpactConfig.plist
+        if let configPath = Bundle.main.path(forResource: "ImpactConfig", ofType: "plist"),
+           let config = NSDictionary(contentsOfFile: configPath) as? [String: Any] {
+            let partnerID = config["IMPACT_PARTNER_ID"] as? String ?? ""
+            let apiKey = config["IMPACT_API_KEY"] as? String ?? ""
+            let apiSecret = config["IMPACT_API_SECRET"] as? String ?? ""
+            let programID = config["IMPACT_PROGRAM_ID"] as? String ?? ""
+            if !apiKey.isEmpty && !apiSecret.isEmpty {
+                return (partnerID, apiKey, apiSecret, programID)
+            }
+        }
+        
+        // Fallback to Info.plist
+        if let partnerID = Bundle.main.infoDictionary?["IMPACT_PARTNER_ID"] as? String,
+           let apiKey = Bundle.main.infoDictionary?["IMPACT_API_KEY"] as? String,
+           let apiSecret = Bundle.main.infoDictionary?["IMPACT_API_SECRET"] as? String,
+           !apiKey.isEmpty && !apiSecret.isEmpty {
+            let programID = Bundle.main.infoDictionary?["IMPACT_PROGRAM_ID"] as? String ?? "13416"
+            return (partnerID, apiKey, apiSecret, programID)
+        }
+        
+        // Return empty credentials if nothing found
+        return ("", "", "", "13416")
+    }
     
     private static let session: URLSession = {
         let config = URLSessionConfiguration.default

@@ -18,14 +18,16 @@ Podfile.lock
 .build/
 .swiftpm/
 
-# Python
-*.pyc
-__pycache__/
-*.egg-info/
-dist/
-build/
+.DS_Store
+.git
+.gitignore
+ImpactAffiliateServiceTest.swift
+README.md
+TRaVeLiNG-Tools_iOS.xcodeproj
+TRaVeLiNG-Tools_iOS
+icon-1024-new.png
+scripts
 
 # Sensitive Configuration
 Config.xcconfig
-*.xcconfig
-!TRaVeLiNG-Tools_iOS.xcconfig
+ImpactConfig.plist
