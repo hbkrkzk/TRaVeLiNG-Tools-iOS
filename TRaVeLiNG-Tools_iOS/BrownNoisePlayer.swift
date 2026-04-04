@@ -179,7 +179,7 @@ extension BrownNoisePlayerService: AVAudioPlayerDelegate {
 
 // MARK: - Timer Options
 
-struct BrownNoiseTimerOption {
+struct BrownNoiseTimerOption: Hashable, Equatable {
     let minutes: Int
     
     var displayText: String {
@@ -196,6 +196,14 @@ struct BrownNoiseTimerOption {
                 return "\(hours)時間\(mins)分"
             }
         }
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(minutes)
+    }
+    
+    static func == (lhs: BrownNoiseTimerOption, rhs: BrownNoiseTimerOption) -> Bool {
+        lhs.minutes == rhs.minutes
     }
 }
 
@@ -375,7 +383,7 @@ struct BrownNoisePlayerView: View {
                     in: 0...1,
                     step: 0.05
                 )
-                .onChange(of: volumeLevel) { oldValue, newValue in
+                .onChange(of: volumeLevel) { newValue in
                     audioService.volume = newValue
                 }
                 
