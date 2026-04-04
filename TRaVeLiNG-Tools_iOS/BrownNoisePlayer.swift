@@ -2,6 +2,8 @@ import AVFoundation
 import Combine
 
 class BrownNoisePlayer: NSObject, ObservableObject {
+    static let shared = BrownNoisePlayer()
+    
     @Published var isPlaying = false
     @Published var volume: Float = 0.5 {
         didSet {

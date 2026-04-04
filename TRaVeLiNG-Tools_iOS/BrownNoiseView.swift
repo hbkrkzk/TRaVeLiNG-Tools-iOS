@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct BrownNoiseView: View {
-    @StateObject private var player = BrownNoisePlayer()
+    @StateObject private var player = BrownNoisePlayer.shared
     @AppStorage("brownNoise_volume") private var savedVolume: Float = 0.5
     @AppStorage("brownNoise_timerMinutes") private var timerMinutes: Int = 0
     @State private var showTimerPicker = false
@@ -237,5 +237,6 @@ struct TimerPickerSheet: View {
 #Preview {
     NavigationStack {
         BrownNoiseView()
+            .environmentObject(BrownNoisePlayer.shared)
     }
 }
