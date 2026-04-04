@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		817D66882F80DD64005570C1 /* ImpactConfig.plist in Resources */ = {isa = PBXBuildFile; fileRef = 817D66872F80DD64005570C1 /* ImpactConfig.plist */; };
+		817D668D2F80E055005570C1 /* BrownNoisePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D668C2F80E055005570C1 /* BrownNoisePlayer.swift */; };
+		817D66902F80E19C005570C1 /* brownnoise_30min.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 817D668E2F80E19C005570C1 /* brownnoise_30min.m4a */; };
 		A1B2C3D4E5F6000000000001 /* TRaVeLiNG_Tools_iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000011 /* TRaVeLiNG_Tools_iOSApp.swift */; };
 		A1B2C3D4E5F6000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000012 /* ContentView.swift */; };
 		A1B2C3D4E5F6000000000003 /* BoardingBarcodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000013 /* BoardingBarcodeView.swift */; };
@@ -22,6 +24,8 @@
 /* Begin PBXFileReference section */
 		817D66872F80DD64005570C1 /* ImpactConfig.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = ImpactConfig.plist; sourceTree = "<group>"; };
 		817D66892F80DE1E005570C1 /* TRaVeLiNG-Tools-iOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "TRaVeLiNG-Tools-iOS-Info.plist"; sourceTree = SOURCE_ROOT; };
+		817D668C2F80E055005570C1 /* BrownNoisePlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrownNoisePlayer.swift; sourceTree = "<group>"; };
+		817D668E2F80E19C005570C1 /* brownnoise_30min.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = brownnoise_30min.m4a; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000010 /* TRaVeLiNG-Tools_iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TRaVeLiNG-Tools_iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1B2C3D4E5F6000000000011 /* TRaVeLiNG_Tools_iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRaVeLiNG_Tools_iOSApp.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -45,6 +49,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		817D668F2F80E19C005570C1 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				817D668E2F80E19C005570C1 /* brownnoise_30min.m4a */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		A1B2C3D4E5F6000000000030 = {
 			isa = PBXGroup;
 			children = (
@@ -56,6 +68,8 @@
 		A1B2C3D4E5F6000000000031 /* TRaVeLiNG-Tools_iOS */ = {
 			isa = PBXGroup;
 			children = (
+				817D668F2F80E19C005570C1 /* Resources */,
+				817D668C2F80E055005570C1 /* BrownNoisePlayer.swift */,
 				817D66892F80DE1E005570C1 /* TRaVeLiNG-Tools-iOS-Info.plist */,
 				817D66872F80DD64005570C1 /* ImpactConfig.plist */,
 				A1B2C3D4E5F6000000000011 /* TRaVeLiNG_Tools_iOSApp.swift */,
@@ -139,6 +153,7 @@
 			files = (
 				817D66882F80DD64005570C1 /* ImpactConfig.plist in Resources */,
 				A1B2C3D4E5F6000000000005 /* Assets.xcassets in Resources */,
+				817D66902F80E19C005570C1 /* brownnoise_30min.m4a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -150,6 +165,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1B2C3D4E5F6000000000001 /* TRaVeLiNG_Tools_iOSApp.swift in Sources */,
+				817D668D2F80E055005570C1 /* BrownNoisePlayer.swift in Sources */,
 				A1B2C3D4E5F6000000000002 /* ContentView.swift in Sources */,
 				A1B2C3D4E5F6000000000003 /* BoardingBarcodeView.swift in Sources */,
 				A1B2C3D4E5F6000000000004 /* FireSimulatorView.swift in Sources */,

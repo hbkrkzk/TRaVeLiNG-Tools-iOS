@@ -39,7 +39,7 @@ struct ContentView: View {
                     } label: {
                         ToolCard(
                             title: "Skyscanner Link",
-                            subtitle: "Skyscannerの検索リンクからアフィリエイトリンクを生成・短縮します。",
+                            subtitle: "",
                             systemImage: "link.circle.fill"
                         )
                     }
@@ -51,8 +51,8 @@ struct ContentView: View {
                         }
                     } label: {
                         ToolCard(
-                            title: "ブラウンノイズ",
-                            subtitle: "ブラウンノイズをループ再生。タイマーとバックグラウンド再生に対応。",
+                            title: "Brown Noise Player",
+                            subtitle: "",
                             systemImage: "waveform.circle.fill"
                         )
                     }
@@ -65,7 +65,7 @@ struct ContentView: View {
                     } label: {
                         ToolCard(
                             title: "Boarding Pass Code",
-                            subtitle: "搭乗券の入力情報をもとに、IATA文字列と Aztec / PDF417 バーコードを生成します。",
+                            subtitle: "",
                             systemImage: "airplane.departure"
                         )
                     }
@@ -78,7 +78,7 @@ struct ContentView: View {
                     } label: {
                         ToolCard(
                             title: "FIRE Simulator",
-                            subtitle: "資産推移、リタイア時資産、資産寿命を可視化して、FIRE計画の試算ができます。",
+                            subtitle: "",
                             systemImage: "flame.fill"
                         )
                     }
@@ -101,9 +101,11 @@ private struct ToolCard: View {
             Label(title, systemImage: systemImage)
                 .font(.headline)
                 .foregroundStyle(.primary)
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            if !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
             HStack {
                 Spacer()
                 Text("このツールを開く")

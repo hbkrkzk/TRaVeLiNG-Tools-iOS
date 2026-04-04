@@ -1,29 +1,31 @@
 import SwiftUI
 import AVFoundation
+import MediaPlayer
 
-// MARK: - Brown Noise Player Service
+// MARK: - Brown Noise Player Service (Singleton)
 
 class BrownNoisePlayerService: NSObject, ObservableObject {
+    static let shared = BrownNoisePlayerService()
+    
     private var audioPlayer: AVAudioPlayer?
     private var displayLink: CADisplayLink?
     private var timerTask: Task<Void, Never>?
     private var backgroundTaskIdentifier: UIBackgroundTaskIdentifier = .invalid
-    private let startTime = Date()
+    private var timerStartTime: Date?
     
     @Published var isPlaying: Bool = false
-    @Published var currentTime: TimeInterval = 0
-    @Published var duration: TimeInterval = 0
-    @Published var volume: Float = 1.0 {
-        didSet {
-            audioPlayer?.volume = volume
-        }
-    }
     @Published var remainingSeconds: Int = 0
     @Published var elapsedSeconds: Int = 0
+    @Published var currentTimerDuration: Int = 0
     
     override init() {
         super.init()
         setupAudioSession()
+        setupRemoteCommands()
+        // 常に50%の音量で再生
+        if let player = audioPlayer {
+            player.volume = 0.5
+        }
     }
     
     deinit {
@@ -35,34 +37,98 @@ class BrownNoisePlayerService: NSObject, ObservableObject {
     private func setupAudioSession() {
         let audioSession = AVAudioSession.sharedInstance()
         do {
-            try audioSession.setCategory(.playback, mode: .default, options: [.duckOthers])
+            try audioSession.setCategory(
+                .playback,
+                mode: .default,
+                options: [.defaultToSpeaker, .duckOthers]
+            )
+            try audioSession.setPreferredSampleRate(44100)
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
         } catch {
             print("❌ AVAudioSession エラー: \(error.localizedDescription)")
         }
     }
     
+    private func setupRemoteCommands() {
+        let commandCenter = MPRemoteCommandCenter.shared()
+        
+        commandCenter.playCommand.addTarget { [weak self] _ in
+            self?.resume()
+            return .success
+        }
+        
+        commandCenter.pauseCommand.addTarget { [weak self] _ in
+            self?.pause()
+            return .success
+        }
+        
+        commandCenter.stopCommand.addTarget { [weak self] _ in
+            self?.stop()
+            return .success
+        }
+        
+        commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in
+            if self?.isPlaying ?? false {
+                self?.pause()
+            } else {
+                self?.resume()
+            }
+            return .success
+        }
+    }
+    
+    private func updateNowPlayingInfo() {
+        var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [String: Any]()
+        
+        nowPlayingInfo[MPMediaItemPropertyTitle] = "Brown Noise Player"
+        nowPlayingInfo[MPMediaItemPropertyArtist] = "Relaxation"
+        nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Brown Noise"
+        
+        if let player = audioPlayer {
+            nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = player.duration
+            nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentTime
+            nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
+        }
+        
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    }
+    
     func startPlayback(duration: TimeInterval = 0) {
-        guard let audioURL = Bundle.main.url(forResource: "brownnoise_30min", withExtension: "m4a") else {
+        // ファイルを検索（Resourcesフォルダ内も確認）
+        var audioURL: URL?
+        
+        audioURL = Bundle.main.url(forResource: "brownnoise_30min", withExtension: "m4a")
+        
+        if audioURL == nil {
+            audioURL = Bundle.main.url(forResource: "brownnoise_30min", withExtension: "m4a", subdirectory: "Resources")
+        }
+        
+        guard let audioURL = audioURL else {
             print("❌ オーディオファイルが見つかりません")
             return
         }
         
         do {
+            print("📁 オーディオファイルURL: \(audioURL)")
             audioPlayer = try AVAudioPlayer(contentsOf: audioURL)
             audioPlayer?.delegate = self
-            audioPlayer?.volume = volume
+            audioPlayer?.volume = 0.5
+            audioPlayer?.enableRate = false
             audioPlayer?.numberOfLoops = -1
             audioPlayer?.play()
             
-            isPlaying = true
-            self.duration = audioPlayer?.duration ?? 0
-            remainingSeconds = Int(duration)
-            elapsedSeconds = 0
+            DispatchQueue.main.async {
+                self.isPlaying = true
+                self.currentTimerDuration = Int(duration)
+                self.remainingSeconds = Int(duration)
+                self.elapsedSeconds = 0
+                self.timerStartTime = Date()
+            }
             
             setupDisplayLink()
             startTimer(duration: duration)
             startBackgroundTask()
+            updateNowPlayingInfo()
             
             print("✅ 再生開始")
         } catch {
@@ -72,31 +138,50 @@ class BrownNoisePlayerService: NSObject, ObservableObject {
     
     func pause() {
         audioPlayer?.pause()
-        isPlaying = false
+        DispatchQueue.main.async {
+            self.isPlaying = false
+        }
         displayLink?.invalidate()
         displayLink = nil
+        stopTimer()
+        updateNowPlayingInfo()
         print("⏸ 一時停止")
     }
     
     func resume() {
         guard let audioPlayer = audioPlayer, !isPlaying else { return }
         audioPlayer.play()
-        isPlaying = true
+        DispatchQueue.main.async {
+            self.isPlaying = true
+            if self.timerStartTime == nil {
+                self.timerStartTime = Date()
+            }
+        }
         setupDisplayLink()
+        startTimer(duration: Double(currentTimerDuration))
+        updateNowPlayingInfo()
         print("▶️ 再開")
     }
     
     func stop() {
         audioPlayer?.stop()
         audioPlayer = nil
-        isPlaying = false
-        currentTime = 0
-        elapsedSeconds = 0
-        remainingSeconds = 0
+        DispatchQueue.main.async {
+            self.isPlaying = false
+            self.elapsedSeconds = 0
+            self.remainingSeconds = 0
+        }
         displayLink?.invalidate()
         displayLink = nil
         stopTimer()
         stopBackgroundTask()
+        timerStartTime = nil
+        currentTimerDuration = 0
+        
+        var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [String: Any]()
+        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = 0.0
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+        
         print("⏹ 停止")
     }
     
@@ -119,11 +204,16 @@ class BrownNoisePlayerService: NSObject, ObservableObject {
         }
         
         DispatchQueue.main.async {
-            self.currentTime = audioPlayer.currentTime
-            
-            if self.remainingSeconds > 0 {
-                self.elapsedSeconds = Int(Date().timeIntervalSince(self.startTime))
+            if let timerStartTime = self.timerStartTime {
+                let elapsed = Int(Date().timeIntervalSince(timerStartTime))
+                self.elapsedSeconds = elapsed
+                
+                if self.currentTimerDuration > 0 {
+                    self.remainingSeconds = max(0, self.currentTimerDuration - elapsed)
+                }
             }
+            
+            self.updateNowPlayingInfo()
         }
     }
     
@@ -228,29 +318,29 @@ class BrownNoiseTimerCalculator {
 // MARK: - Brown Noise Player View
 
 struct BrownNoisePlayerView: View {
-    @StateObject private var audioService = BrownNoisePlayerService()
+    @ObservedObject var audioService = BrownNoisePlayerService.shared
     @State private var selectedTimerOption: BrownNoiseTimerOption = BrownNoiseTimerOption(minutes: 0)
     @State private var timerOptions: [BrownNoiseTimerOption] = []
-    @State private var volumeLevel: Float = 1.0
     
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     statusSection
+                    timerSelectionSection
                     playerControlsSection
-                    timerSection
-                    volumeControlSection
                     
                     Spacer()
                 }
                 .padding(16)
             }
-            .navigationTitle("ブラウンノイズ")
+            .navigationTitle("Brown Noise Player")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 timerOptions = BrownNoiseTimerCalculator.generateTimerOptions()
-                selectedTimerOption = timerOptions.first ?? BrownNoiseTimerOption(minutes: 0)
+                if selectedTimerOption.minutes == 0 && !timerOptions.isEmpty {
+                    selectedTimerOption = timerOptions.first ?? BrownNoiseTimerOption(minutes: 0)
+                }
             }
         }
     }
@@ -268,11 +358,11 @@ struct BrownNoisePlayerView: View {
                 
                 Spacer()
                 
-                if audioService.remainingSeconds > 0 {
+                if audioService.remainingSeconds > 0 && audioService.isPlaying {
                     HStack(spacing: 4) {
                         Image(systemName: "hourglass.circle.fill")
                             .font(.system(size: 14))
-                        Text(formatTime(audioService.remainingSeconds - audioService.elapsedSeconds))
+                        Text(formatCountdown(audioService.remainingSeconds))
                             .font(.system(.body, design: .monospaced))
                             .fontWeight(.semibold)
                     }
@@ -283,87 +373,54 @@ struct BrownNoisePlayerView: View {
             .background(Color(.systemGray6))
             .cornerRadius(8)
             
-            if audioService.duration > 0 {
-                VStack(spacing: 6) {
+            if audioService.isPlaying && audioService.remainingSeconds > 0 {
+                VStack(spacing: 8) {
+                    Text(formatCountdown(audioService.remainingSeconds))
+                        .font(.system(size: 48, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.blue)
+                    
                     ProgressView(
-                        value: audioService.currentTime / audioService.duration
+                        value: Double(audioService.elapsedSeconds),
+                        total: Double(audioService.currentTimerDuration)
                     )
                     .tint(.blue)
-                    
-                    HStack {
-                        Text(formatTime(Int(audioService.currentTime)))
-                            .font(.system(.caption, design: .monospaced))
-                            .foregroundStyle(.secondary)
-                        
-                        Spacer()
-                        
-                        Text(formatTime(Int(audioService.duration)))
-                            .font(.system(.caption, design: .monospaced))
-                            .foregroundStyle(.secondary)
-                    }
                 }
-                .padding(12)
-                .background(Color(.systemGray6))
-                .cornerRadius(8)
+                .padding(16)
+                .background(Color.blue.opacity(0.1))
+                .cornerRadius(12)
             }
         }
     }
     
-    private var playerControlsSection: some View {
-        HStack(spacing: 12) {
-            Button(action: { audioService.stop() }) {
-                Image(systemName: "stop.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                    .frame(height: 50)
-                    .frame(maxWidth: .infinity)
-                    .foregroundStyle(.white)
-                    .background(Color.red)
-                    .cornerRadius(10)
-            }
-            .disabled(!audioService.isPlaying && audioService.currentTime == 0)
-            .opacity(!audioService.isPlaying && audioService.currentTime == 0 ? 0.5 : 1)
-            
-            Button(action: {
-                if audioService.isPlaying {
-                    audioService.pause()
-                } else if audioService.currentTime > 0 {
-                    audioService.resume()
-                } else {
-                    audioService.startPlayback(
-                        duration: Double(selectedTimerOption.minutes * 60)
-                    )
-                }
-            }) {
-                Image(systemName: audioService.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 20, weight: .semibold))
-                    .frame(height: 50)
-                    .frame(maxWidth: .infinity)
-                    .foregroundStyle(.white)
-                    .background(Color.blue)
-                    .cornerRadius(10)
-            }
-        }
-    }
-    
-    private var timerSection: some View {
+    private var timerSelectionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("タイマー")
+            Text("タイマー設定")
                 .font(.headline)
             
-            Picker("タイマー", selection: $selectedTimerOption) {
-                ForEach(timerOptions, id: \.minutes) { option in
-                    Text(option.displayText).tag(option)
+            if audioService.isPlaying {
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "hourglass.circle.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                        
+                        Text(selectedTimerOption.displayText)
+                            .font(.system(.body, design: .rounded))
+                            .fontWeight(.semibold)
+                        
+                        Spacer()
+                    }
+                    .padding(12)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(8)
                 }
-            }
-            .pickerStyle(.wheel)
-            .frame(height: 120)
-            .disabled(audioService.isPlaying)
-            .opacity(audioService.isPlaying ? 0.6 : 1)
-            
-            if !audioService.isPlaying && audioService.currentTime == 0 {
-                Text("再生前にタイマーを設定できます")
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(.secondary)
+            } else {
+                Picker("タイマー", selection: $selectedTimerOption) {
+                    ForEach(timerOptions, id: \.minutes) { option in
+                        Text(option.displayText).tag(option)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(height: 140)
             }
         }
         .padding(12)
@@ -371,33 +428,41 @@ struct BrownNoisePlayerView: View {
         .cornerRadius(12)
     }
     
-    private var volumeControlSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: "speaker.fill")
-                    .font(.system(size: 14, weight: .semibold))
-                    .frame(width: 24)
-                
-                Slider(
-                    value: $volumeLevel,
-                    in: 0...1,
-                    step: 0.05
+    private var playerControlsSection: some View {
+        HStack(spacing: 12) {
+            // スタートボタン
+            Button(action: {
+                audioService.startPlayback(
+                    duration: Double(selectedTimerOption.minutes * 60)
                 )
-                .onChange(of: volumeLevel) { newValue in
-                    audioService.volume = newValue
-                }
-                
-                Image(systemName: "speaker.wave.3.fill")
-                    .font(.system(size: 14, weight: .semibold))
-                    .frame(width: 24)
+            }) {
+                Image(systemName: "play.fill")
+                    .font(.system(size: 20, weight: .semibold))
+                    .frame(height: 60)
+                    .frame(maxWidth: .infinity)
+                    .foregroundStyle(.white)
+                    .background(Color.blue)
+                    .cornerRadius(12)
             }
-            .padding(12)
-            .background(Color(.systemGray6))
-            .cornerRadius(8)
+            .disabled(audioService.isPlaying)
+            .opacity(audioService.isPlaying ? 0.5 : 1)
+            
+            // 停止ボタン
+            Button(action: { audioService.stop() }) {
+                Image(systemName: "stop.fill")
+                    .font(.system(size: 20, weight: .semibold))
+                    .frame(height: 60)
+                    .frame(maxWidth: .infinity)
+                    .foregroundStyle(.white)
+                    .background(Color.red)
+                    .cornerRadius(12)
+            }
+            .disabled(!audioService.isPlaying)
+            .opacity(!audioService.isPlaying ? 0.5 : 1)
         }
     }
     
-    private func formatTime(_ seconds: Int) -> String {
+    private func formatCountdown(_ seconds: Int) -> String {
         let totalSeconds = max(0, seconds)
         let hours = totalSeconds / 3600
         let minutes = (totalSeconds % 3600) / 60
