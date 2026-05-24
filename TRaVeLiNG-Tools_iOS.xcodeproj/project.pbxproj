@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		817D66882F80DD64005570C1 /* ImpactConfig.plist in Resources */ = {isa = PBXBuildFile; fileRef = 817D66872F80DD64005570C1 /* ImpactConfig.plist */; };
+		D8CE3FDEE4C54B6C82DF7710 /* LocalConfig.plist in Resources */ = {isa = PBXBuildFile; fileRef = B08B988E889A4C848EC7627C /* LocalConfig.plist */; };
 		817D668D2F80E055005570C1 /* BrownNoisePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D668C2F80E055005570C1 /* BrownNoisePlayer.swift */; };
 		817D66902F80E19C005570C1 /* brownnoise_30min.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 817D668E2F80E19C005570C1 /* brownnoise_30min.m4a */; };
 		817D66A12F816A74005570C1 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D669B2F816A74005570C1 /* ChatMessage.swift */; };
@@ -31,6 +32,8 @@
 
 /* Begin PBXFileReference section */
 		817D66872F80DD64005570C1 /* ImpactConfig.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = ImpactConfig.plist; sourceTree = "<group>"; };
+		B08B988E889A4C848EC7627C /* LocalConfig.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = LocalConfig.plist; sourceTree = "<group>"; };
+		0D6682C419E14AEB8EA3FA3C /* LocalConfig.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = LocalConfig.plist; sourceTree = "<group>"; };
 		817D66892F80DE1E005570C1 /* TRaVeLiNG-Tools-iOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "TRaVeLiNG-Tools-iOS-Info.plist"; sourceTree = SOURCE_ROOT; };
 		817D668C2F80E055005570C1 /* BrownNoisePlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrownNoisePlayer.swift; sourceTree = "<group>"; };
 		817D668E2F80E19C005570C1 /* brownnoise_30min.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = brownnoise_30min.m4a; sourceTree = "<group>"; };
@@ -96,6 +99,7 @@
 				817D668C2F80E055005570C1 /* BrownNoisePlayer.swift */,
 				817D66892F80DE1E005570C1 /* TRaVeLiNG-Tools-iOS-Info.plist */,
 				817D66872F80DD64005570C1 /* ImpactConfig.plist */,
+				B08B988E889A4C848EC7627C /* LocalConfig.plist */,
 				A1B2C3D4E5F6000000000011 /* TRaVeLiNG_Tools_iOSApp.swift */,
 				A1B2C3D4E5F6000000000012 /* ContentView.swift */,
 				A1B2C3D4E5F6000000000013 /* BoardingBarcodeView.swift */,
@@ -176,6 +180,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				817D66882F80DD64005570C1 /* ImpactConfig.plist in Resources */,
+				D8CE3FDEE4C54B6C82DF7710 /* LocalConfig.plist in Resources */,
 				A1B2C3D4E5F6000000000005 /* Assets.xcassets in Resources */,
 				817D66902F80E19C005570C1 /* brownnoise_30min.m4a in Resources */,
 			);
