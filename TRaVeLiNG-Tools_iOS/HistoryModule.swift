@@ -18,6 +18,7 @@ struct AffiliateURLRecord: Identifiable, Codable {
     let tripShortUrl: String?
     let travelokaShortUrl: String?
     let kiwiShortUrl: String?
+    let agodaShortUrl: String?
     let shareText: String?
     
     init(
@@ -34,7 +35,7 @@ struct AffiliateURLRecord: Identifiable, Codable {
         campaignId: Int? = nil,
         tripShortUrl: String? = nil,
         travelokaShortUrl: String? = nil,
-        kiwiShortUrl: String? = nil,
+        kiwiShortUrl: String?; let agodaShortUrl: String? = nil,
         shareText: String? = nil
     ) {
         self.id = id
@@ -51,6 +52,7 @@ struct AffiliateURLRecord: Identifiable, Codable {
         self.tripShortUrl = tripShortUrl
         self.travelokaShortUrl = travelokaShortUrl
         self.kiwiShortUrl = kiwiShortUrl
+        self.agodaShortUrl = agodaShortUrl
         self.shareText = shareText
     }
     
@@ -99,6 +101,7 @@ struct AffiliateURLRecord: Identifiable, Codable {
             "tripShortUrl": tripShortUrl as Any,
             "travelokaShortUrl": travelokaShortUrl as Any,
             "kiwiShortUrl": kiwiShortUrl as Any,
+            "agodaShortUrl": agodaShortUrl as Any,
             "shareText": shareText as Any
         ]
     }
@@ -130,6 +133,7 @@ struct AffiliateURLRecord: Identifiable, Codable {
         self.tripShortUrl = dictionary["tripShortUrl"] as? String
         self.travelokaShortUrl = dictionary["travelokaShortUrl"] as? String
         self.kiwiShortUrl = dictionary["kiwiShortUrl"] as? String
+        self.agodaShortUrl = dictionary["agodaShortUrl"] as? String
         self.shareText = dictionary["shareText"] as? String
     }
 }
@@ -171,8 +175,8 @@ class AffiliateURLHistoryManager: ObservableObject {
             }
     }
     
-    func addRecord(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool, partnerName: String? = nil, campaignId: Int? = nil, tripShortUrl: String? = nil, travelokaShortUrl: String? = nil, kiwiShortUrl: String? = nil, shareText: String? = nil) {
-        let record = AffiliateURLRecord(departureCode: departureCode, arrivalCode: arrivalCode, outboundDate: outboundDate, returnDate: returnDate, shortenedURL: shortenedURL, affiliateURL: affiliateURL, isRoundTrip: isRoundTrip, partnerName: partnerName, campaignId: campaignId, tripShortUrl: tripShortUrl, travelokaShortUrl: travelokaShortUrl, kiwiShortUrl: kiwiShortUrl, shareText: shareText)
+    func addRecord(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool, partnerName: String? = nil, campaignId: Int? = nil, tripShortUrl: String? = nil, travelokaShortUrl: String? = nil, kiwiShortUrl: String?; let agodaShortUrl: String? = nil, shareText: String? = nil) {
+        let record = AffiliateURLRecord(departureCode: departureCode, arrivalCode: arrivalCode, outboundDate: outboundDate, returnDate: returnDate, shortenedURL: shortenedURL, affiliateURL: affiliateURL, isRoundTrip: isRoundTrip, partnerName: partnerName, campaignId: campaignId, tripShortUrl: tripShortUrl, travelokaShortUrl: travelokaShortUrl, kiwiShortUrl: kiwiShortUrl, agodaShortUrl: agodaShortUrl, shareText: shareText)
         
         // Firestoreに保存（オフライン時は自動でキューイングされる）
         db.collection("history").document(record.id).setData(record.dictionary) { error in
@@ -331,6 +335,13 @@ struct AffiliateHistoryListView: View {
                                             actionButton(label: "トラベロカ", color: .cyan) {
                                                 UIPasteboard.general.string = travelokaUrl
                                                 showCopyFeedback = "トラベロカリンクをコピーしました"
+                                            }
+                                        }
+
+                                        if let agodaUrl = record.agodaShortUrl {
+                                            actionButton(label: "agoda", color: .orange) {
+                                                UIPasteboard.general.string = agodaUrl
+                                                showCopyFeedback = "agodaリンクをコピーしました"
                                             }
                                         }
                                         

@@ -5,11 +5,13 @@ struct SkyscannerAffiliateView: View {
     @State private var tripComEnabled: Bool = false
     @State private var travelokaEnabled: Bool = false
     @State private var kiwiComEnabled: Bool = false
+    @State private var agodaEnabled: Bool = false
     @State private var generatedURL: String?
     @State private var shortenedURL: String?
     @State private var tripShortenedURL: String?
     @State private var travelokaShortenedURL: String?
     @State private var kiwiShortenedURL: String?
+    @State private var agodaShortenedURL: String?
     @State private var shareText: String?
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
@@ -76,6 +78,7 @@ struct SkyscannerAffiliateView: View {
                                 tripComEnabled = true
                                 travelokaEnabled = true
                                 kiwiComEnabled = true
+                                agodaEnabled = true
                             }) {
                                 Text("すべて選択")
                                     .font(.caption.weight(.semibold))
@@ -104,6 +107,13 @@ struct SkyscannerAffiliateView: View {
                             
                             Toggle(isOn: $travelokaEnabled) {
                                 Text("トラベロカ")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                            }
+                            .toggleStyle(CompactToggleStyle())
+
+                            Toggle(isOn: $agodaEnabled) {
+                                Text("agoda")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                             }
@@ -145,6 +155,10 @@ struct SkyscannerAffiliateView: View {
                         
                         if let shortUrl = travelokaShortenedURL {
                             resultBox(title: "短縮URL (トラベロカ)", icon: "link.circle.fill", content: shortUrl, color: .blue)
+                        }
+
+                        if let shortUrl = agodaShortenedURL {
+                            resultBox(title: "短縮URL (agoda)", icon: "link.circle.fill", content: shortUrl, color: .orange)
                         }
 
                         if let shortUrl = kiwiShortenedURL {
@@ -291,6 +305,7 @@ struct SkyscannerAffiliateView: View {
                 var tripShortUrl: String?
                 var travelokaShortUrl: String?
                 var kiwiShortUrl: String?
+                var agodaShortUrl: String?
                 
                 if tripComEnabled {
                     if let tripUrl = generateTripURL(info: info) {
@@ -310,12 +325,19 @@ struct SkyscannerAffiliateView: View {
                     }
                 }
                 
+                if agodaEnabled {
+                    if let agodaUrl = generateAgodaURL(info: info) {
+                        agodaShortUrl = await generatePartnerAffiliateLink(url: agodaUrl, campaignId: 2854)
+                    }
+                }
+                
                 // シェアテキスト生成
                 let shareText = generateShareText(
                     isRoundTrip: info.isRoundTrip,
                     tripShortUrl: tripShortUrl,
                     travelokaShortUrl: travelokaShortUrl,
                     kiwiShortUrl: kiwiShortUrl,
+                    agodaShortUrl: agodaShortUrl,
                     skyscannerShortUrl: shortUrl
                 )
                 
@@ -326,6 +348,7 @@ struct SkyscannerAffiliateView: View {
                     self.tripShortenedURL = tripShortUrl
                     self.travelokaShortenedURL = travelokaShortUrl
                     self.kiwiShortenedURL = kiwiShortUrl
+                    self.agodaShortenedURL = agodaShortUrl
                     self.shareText = shareText
                     self.isLoading = false
                     
@@ -341,6 +364,7 @@ struct SkyscannerAffiliateView: View {
                         tripShortUrl: tripShortUrl,
                         travelokaShortUrl: travelokaShortUrl,
                         kiwiShortUrl: kiwiShortUrl,
+                        agodaShortUrl: agodaShortUrl,
                         shareText: shareText
                     )
                 }
@@ -396,6 +420,18 @@ struct SkyscannerAffiliateView: View {
         
         return urlString
     }
+
+    private func generateAgodaURL(info: SkyscannerFlightInfo) -> String? {
+        // Agodaはホテルがメインだが、フライト検索ページへのディープリンクを作成
+        let departure = info.departure.uppercased()
+        let arrival = info.arrival.uppercased()
+        let departDate = info.departureDate // yyyy-mm-dd
+        
+        // フライト検索のベースURL
+        let urlString = "https://www.agoda.com/ja-jp/flights/search?origin=\(departure)&destination=\(arrival)&departureDate=\(departDate)&cabinClass=Economy&adults=1"
+        
+        return urlString
+    }
     
     private func formatDateForTrip(_ dateStr: String) -> String {
         // すでに yyyy-mm-dd 形式ならそのまま返す
@@ -441,6 +477,7 @@ struct SkyscannerAffiliateView: View {
         tripShortUrl: String?,
         travelokaShortUrl: String?,
         kiwiShortUrl: String?,
+        agodaShortUrl: String?,
         skyscannerShortUrl: String
     ) -> String {
         var text = ""
@@ -457,13 +494,17 @@ struct SkyscannerAffiliateView: View {
         if let travelokaUrl = travelokaShortUrl {
             text += "✈️トラベロカで予約\n\(travelokaUrl)\n\n"
         }
+
+        if let agodaUrl = agodaShortUrl {
+            text += "✈️agodaで予約\n\(agodaUrl)\n\n"
+        }
         
         // Skyscanner
         let tripTypeLabel = isRoundTrip ? "往復" : "片道"
         text += "🔍️スカイスキャナーで検索\n\(tripTypeLabel): \(skyscannerShortUrl)\n\n"
         
         // パートナー選択がない場合のみ楽天モバイルを表示
-        if tripShortUrl == nil && travelokaShortUrl == nil && kiwiShortUrl == nil {
+        if tripShortUrl == nil && travelokaShortUrl == nil && kiwiShortUrl == nil && agodaShortUrl == nil {
             text += "📲楽天モバイル\n"
             text += "🌏海外データ2GB/月\n"
             text += "▽乗換で1.4万、新規で1.1万ptゲット\n"
@@ -720,8 +761,15 @@ class TravelPayoutsAffiliateService {
             let partnerURL = "https://c111.travelpayouts.com/click?shmarker=\(marker)&promo_id=3791&source_type=customlink&type=click&custom_url=\(encodedUrl)"
             return (partnerURL: partnerURL, campaignId: campaignId)
         }
-        
-        guard let requestURL = URL(string: baseURL) else {
+
+        // Agoda の場合もカスタムリンク形式を使用
+        if campaignId == 2854 {
+            let encodedUrl = url.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? url
+            let partnerURL = "https://c104.travelpayouts.com/click?shmarker=\(marker)&promo_id=2854&source_type=customlink&type=click&custom_url=\(encodedUrl)"
+            return (partnerURL: partnerURL, campaignId: campaignId)
+        }
+
+        let linkRequest = LinkRequest(url: url, sub_id: nil)
             throw TravelPayoutsError.invalidURL
         }
         
