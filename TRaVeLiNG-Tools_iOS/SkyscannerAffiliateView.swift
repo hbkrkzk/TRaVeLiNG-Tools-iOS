@@ -400,7 +400,7 @@ struct SkyscannerAffiliateView: View {
         if tripShortUrl == nil && travelokaShortUrl == nil {
             text += "📲楽天モバイル\n"
             text += "🌏海外データ2GB/月\n"
-            text += "▽乗換で1.4万ptゲット\n"
+            text += "▽乗換で1.4万、新規で1.1万ptゲット\n"
             text += "https://x.gd/6LqKk\n\n"
         }
         
