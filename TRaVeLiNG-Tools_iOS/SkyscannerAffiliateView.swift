@@ -2,11 +2,12 @@ import SwiftUI
 
 struct SkyscannerAffiliateView: View {
     @State private var skyscannerLink: String = ""
-    @State private var partnerLink: String = ""
+    @State private var tripComEnabled: Bool = false
+    @State private var travelokaEnabled: Bool = false
     @State private var generatedURL: String?
     @State private var shortenedURL: String?
-    @State private var partnerGeneratedURL: String?
-    @State private var partnerShortenedURL: String?
+    @State private var tripShortenedURL: String?
+    @State private var travelokaShortenedURL: String?
     @State private var shareText: String?
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
@@ -16,25 +17,19 @@ struct SkyscannerAffiliateView: View {
     @State private var activeMenuTab: Int = 0
     @State private var flightInfo: SkyscannerFlightInfo?
     @State private var showCopyFeedback: String?
-    @State private var partnerName: String?
-    @State private var campaignId: Int?
     @StateObject private var historyManager = AffiliateURLHistoryManager.shared
     
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
+                    // Skyscannerリンク入力
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("URLを入力")
+                        Text("Skyscannerリンク")
                             .font(.headline)
                         
                         VStack(spacing: 8) {
-                            TextField("Skyscannerリンク", text: $skyscannerLink)
-                                .textFieldStyle(.roundedBorder)
-                                .font(.body)
-                                .frame(height: 44)
-                            
-                            TextField("Traveloka / Trip.com (オプション)", text: $partnerLink)
+                            TextField("リンクをペーストする", text: $skyscannerLink)
                                 .textFieldStyle(.roundedBorder)
                                 .font(.body)
                                 .frame(height: 44)
@@ -58,6 +53,35 @@ struct SkyscannerAffiliateView: View {
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
                     
+                    // パートナー選択
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("パートナー選択")
+                            .font(.headline)
+                        
+                        VStack(spacing: 12) {
+                            Toggle(isOn: $tripComEnabled) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                    Text("Trip.com")
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                            
+                            Toggle(isOn: $travelokaEnabled) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                    Text("Traveloka")
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                        }
+                        .padding(8)
+                    }
+                    .padding(12)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                    
+                    // 生成ボタン
                     Button(action: generateURL) {
                         HStack(spacing: 8) {
                             if isLoading {
@@ -85,8 +109,12 @@ struct SkyscannerAffiliateView: View {
                             resultBox(title: "シェアテキスト", icon: "quote.bubble.fill", content: text, color: .orange)
                         }
                         
-                        if let shortUrl = partnerShortenedURL, let pName = partnerName {
-                            resultBox(title: "パートナーURL (\(pName))", icon: "link.circle.fill", content: shortUrl, color: .cyan)
+                        if let shortUrl = travelokaShortenedURL {
+                            resultBox(title: "短縮URL (Traveloka)", icon: "link.circle.fill", content: shortUrl, color: .blue)
+                        }
+                        
+                        if let shortUrl = tripShortenedURL {
+                            resultBox(title: "短縮URL (Trip.com)", icon: "link.circle.fill", content: shortUrl, color: .cyan)
                         }
                         
                         if let shortUrl = shortenedURL {
@@ -194,10 +222,9 @@ struct SkyscannerAffiliateView: View {
     }
     
     private func generateURL() {
-        let trimmedSkyscannerLink = skyscannerLink.trimmingCharacters(in: .whitespaces)
-        let trimmedPartnerLink = partnerLink.trimmingCharacters(in: .whitespaces)
+        let trimmedLink = skyscannerLink.trimmingCharacters(in: .whitespaces)
         
-        guard !trimmedSkyscannerLink.isEmpty else {
+        guard !trimmedLink.isEmpty else {
             errorMessage = "Skyscanner URLを入力してください"
             showError = true
             return
@@ -206,11 +233,10 @@ struct SkyscannerAffiliateView: View {
         isLoading = true
         errorMessage = nil
         
-        // async/await で処理を実行
         Task {
             do {
-                // URL解析
-                guard let info = await parseSkyscannerLinkAsync(trimmedSkyscannerLink) else {
+                // Skyscannerリンク解析
+                guard let info = await parseSkyscannerLinkAsync(trimmedLink) else {
                     await MainActor.run {
                         self.errorMessage = "URLを解析できませんでした"
                         self.showError = true
@@ -219,61 +245,42 @@ struct SkyscannerAffiliateView: View {
                     return
                 }
                 
-                // Impact.com API でSkyscannerアフィリエイトURL生成
-                let affiliateUrl = try await SkyscannerURLService.generateAffiliateURLDirectAsync(trimmedSkyscannerLink)
+                // Skyscanner アフィリエイトURL生成
+                let affiliateUrl = try await SkyscannerURLService.generateAffiliateURLDirectAsync(trimmedLink)
+                let shortUrl = await shortenURLAsync(affiliateUrl) ?? affiliateUrl
                 
-                // パートナーリンクの処理
-                var finalPartnerName: String? = nil
-                var finalCampaignId: Int? = nil
-                var finalPartnerAffiliateUrl: String? = nil
-                var finalPartnerShortenedUrl: String? = nil
+                // パートナーURLの生成
+                var tripShortUrl: String?
+                var travelokaShortUrl: String?
                 
-                if !trimmedPartnerLink.isEmpty {
-                    do {
-                        let (partnerAffiliateUrl, campaignId) = try await TravelPayoutsAffiliateService.generateAffiliateLink(from: trimmedPartnerLink)
-                        finalPartnerName = TravelPayoutsAffiliateService.getPartnerName(campaignId: campaignId)
-                        finalCampaignId = campaignId
-                        finalPartnerAffiliateUrl = partnerAffiliateUrl
-                        
-                        // パートナーURLを短縮
-                        if let shortened = await shortenURLAsync(partnerAffiliateUrl) {
-                            finalPartnerShortenedUrl = shortened
-                        } else {
-                            finalPartnerShortenedUrl = partnerAffiliateUrl
-                        }
-                    } catch {
-                        print("⚠️ パートナーリンク生成エラー: \(error.localizedDescription)")
+                if tripComEnabled {
+                    if let tripUrl = generateTripURL(info: info) {
+                        tripShortUrl = await generatePartnerAffiliateLink(url: tripUrl, campaignId: 121)
                     }
                 }
                 
-                // 短縮URL取得
-                let shortUrl = await shortenURLAsync(affiliateUrl)
+                if travelokaEnabled {
+                    if let travelokaUrl = generateTravelokaURL(info: info) {
+                        travelokaShortUrl = await generatePartnerAffiliateLink(url: travelokaUrl, campaignId: 632)
+                    }
+                }
+                
+                // シェアテキスト生成
+                let shareText = generateShareText(
+                    isRoundTrip: info.isRoundTrip,
+                    tripShortUrl: tripShortUrl,
+                    travelokaShortUrl: travelokaShortUrl,
+                    skyscannerShortUrl: shortUrl
+                )
                 
                 await MainActor.run {
                     self.flightInfo = info
                     self.generatedURL = affiliateUrl
-                    self.partnerGeneratedURL = finalPartnerAffiliateUrl
-                    
-                    let finalUrl = shortUrl ?? affiliateUrl
-                    self.shortenedURL = finalUrl
-                    self.partnerShortenedURL = finalPartnerShortenedUrl
-                    self.partnerName = finalPartnerName
-                    self.campaignId = finalCampaignId
-                    
-                    // シェアテキスト生成
-                    if let partnerName = finalPartnerName, let partnerShortUrl = finalPartnerShortenedUrl {
-                        self.shareText = ShareTextService.shared.generateShareTextWithPartner(
-                            isRoundTrip: info.isRoundTrip,
-                            partnerName: partnerName,
-                            partnerURL: partnerShortUrl,
-                            skycannerURL: finalUrl
-                        )
-                    } else {
-                        let template = info.isRoundTrip
-                            ? ShareTextService.shared.getRoundTripTemplate()
-                            : ShareTextService.shared.getOnewayTemplate()
-                        self.shareText = template.replacingOccurrences(of: "{URL}", with: finalUrl)
-                    }
+                    self.shortenedURL = shortUrl
+                    self.tripShortenedURL = tripShortUrl
+                    self.travelokaShortenedURL = travelokaShortUrl
+                    self.shareText = shareText
+                    self.isLoading = false
                     
                     // 履歴に保存
                     self.historyManager.addRecord(
@@ -281,20 +288,10 @@ struct SkyscannerAffiliateView: View {
                         arrivalCode: info.arrival,
                         outboundDate: info.departureDate,
                         returnDate: info.returnDate,
-                        shortenedURL: finalUrl,
+                        shortenedURL: shortUrl,
                         affiliateURL: affiliateUrl,
-                        isRoundTrip: info.isRoundTrip,
-                        partnerName: finalPartnerName,
-                        campaignId: finalCampaignId
+                        isRoundTrip: info.isRoundTrip
                     )
-                    
-                    self.isLoading = false
-                }
-            } catch let error as ImpactAffiliateService.ImpactError {
-                await MainActor.run {
-                    self.errorMessage = error.localizedDescription
-                    self.showError = true
-                    self.isLoading = false
                 }
             } catch {
                 await MainActor.run {
@@ -306,7 +303,113 @@ struct SkyscannerAffiliateView: View {
         }
     }
     
-    /// URL解析を非同期で実行
+    private func generateTripURL(info: SkyscannerFlightInfo) -> String? {
+        let baseURL = "https://jp.trip.com/flights/showfarefirst"
+        let params: [String: String] = [
+            "dcity": info.departure,
+            "acity": info.arrival,
+            "ddate": formatDateForTrip(info.departureDate),
+            "rdate": formatDateForTrip(info.returnDate ?? info.departureDate),
+            "triptype": "rt",
+            "class": "y",
+            "lowpricesource": "searchform",
+            "quantity": "1",
+            "searchboxarg": "t",
+            "nonstoponly": "off",
+            "locale": "ja-JP",
+            "curr": "JPY"
+        ]
+        
+        let queryString = params.map { "\($0.key)=\($0.value)" }.joined(separator: "&")
+        return "\(baseURL)?\(queryString)"
+    }
+    
+    private func generateTravelokaURL(info: SkyscannerFlightInfo) -> String? {
+        let isRoundTrip = info.returnDate != nil && info.returnDate != info.departureDate
+        let baseURL = "https://www.traveloka.com/ja-jp/flight"
+        let endpoint = isRoundTrip ? "fulltwosearch" : "fullsearch"
+        
+        let depDate = formatDateForTraveloka(info.departureDate)
+        let retDate = isRoundTrip ? formatDateForTraveloka(info.returnDate ?? info.departureDate) : "NA"
+        
+        let params: [String: String] = [
+            "ap": "\(info.departure).\(info.arrival)",
+            "dt": "\(depDate).\(retDate)",
+            "ps": "1.0.0",
+            "sc": "ECONOMY",
+            "funnelSource": "SEO-Default-SearchForm"
+        ]
+        
+        let queryString = params.map { "\($0.key)=\($0.value)" }.joined(separator: "&")
+        return "\(baseURL)/\(endpoint)?\(queryString)"
+    }
+    
+    private func formatDateForTrip(_ dateStr: String) -> String {
+        // Input: yyyymmdd, Output: yyyy-mm-dd
+        guard dateStr.count >= 8 else { return dateStr }
+        let year = dateStr.prefix(4)
+        let month = dateStr.dropFirst(4).prefix(2)
+        let day = dateStr.dropFirst(6).prefix(2)
+        return "\(year)-\(month)-\(day)"
+    }
+    
+    private func formatDateForTraveloka(_ dateStr: String) -> String {
+        // Input: yyyymmdd, Output: dd-m-yyyy
+        guard dateStr.count >= 8 else { return dateStr }
+        let year = dateStr.prefix(4)
+        let month = dateStr.dropFirst(4).prefix(2)
+        let day = dateStr.dropFirst(6).prefix(2)
+        return "\(day)-\(month)-\(year)"
+    }
+    
+    private func generatePartnerAffiliateLink(url: String, campaignId: Int) async -> String? {
+        do {
+            let (partnerUrl, _) = try await TravelPayoutsAffiliateService.generateAffiliateLink(from: url, shorten: false)
+            return await shortenURLAsync(partnerUrl) ?? partnerUrl
+        } catch {
+            print("Partner link error: \(error)")
+            return await shortenURLAsync(url) ?? url
+        }
+    }
+    
+    private func generateShareText(
+        isRoundTrip: Bool,
+        tripShortUrl: String?,
+        travelokaShortUrl: String?,
+        skyscannerShortUrl: String
+    ) -> String {
+        var text = ""
+        
+        // パートナーリンクを追加
+        if let tripUrl = tripShortUrl {
+            text += "✈️直接Trip.comで予約\n\(tripUrl)\n\n"
+        }
+        
+        if let travelokaUrl = travelokaShortUrl {
+            text += "✈️直接Travelokaで予約\n\(travelokaUrl)\n\n"
+        }
+        
+        // Skyscanner
+        let tripTypeLabel = isRoundTrip ? "往復" : "片道"
+        text += "✈️スカイスキャナーで検索\n\(tripTypeLabel): \(skyscannerShortUrl)\n\n"
+        
+        // パートナー選択がない場合、楽天モバイルを表示
+        if tripShortUrl == nil && travelokaShortUrl == nil {
+            text += "💳️セゾンプラチナビジネス\n"
+            text += "✅PP無料付帯\n"
+            text += "▽特別招待ー初年度無料＆アマギフ1.2万\n"
+            text += "https://x.gd/TYSba"
+        } else {
+            // パートナー選択がある場合、楽天モバイル前に改行
+            text += "💳️セゾンプラチナビジネス\n"
+            text += "✅PP無料付帯\n"
+            text += "▽特別招待ー初年度無料＆アマギフ1.2万\n"
+            text += "https://x.gd/TYSba"
+        }
+        
+        return text
+    }
+    
     private func parseSkyscannerLinkAsync(_ link: String) async -> SkyscannerFlightInfo? {
         return await withCheckedContinuation { continuation in
             SkyscannerURLService.parseSkyscannerLink(link) { info in
@@ -315,7 +418,6 @@ struct SkyscannerAffiliateView: View {
         }
     }
     
-    /// URL短縮を非同期で実行
     private func shortenURLAsync(_ url: String) async -> String? {
         return await withCheckedContinuation { continuation in
             SkyscannerURLService().shortenURL(url) { shortUrl in
@@ -325,13 +427,8 @@ struct SkyscannerAffiliateView: View {
     }
     
     private func pasteFromClipboard() {
-        if let clipboard = UIPasteboard.general.string {
-            // パートナーリンクかSkyscannerリンクかを自動判定
-            if TravelPayoutsAffiliateService.getCampaignId(from: clipboard) != nil {
-                partnerLink = clipboard
-            } else {
-                skyscannerLink = clipboard
-            }
+        if let content = UIPasteboard.general.string {
+            skyscannerLink = content
         }
     }
     
@@ -531,7 +628,7 @@ class TravelPayoutsAffiliateService {
         return nil
     }
     
-    static func generateAffiliateLink(from url: String) async throws -> (partnerURL: String, campaignId: Int) {
+    static func generateAffiliateLink(from url: String, shorten: Bool = true) async throws -> (partnerURL: String, campaignId: Int) {
         guard !url.isEmpty else {
             throw TravelPayoutsError.invalidURL
         }
@@ -552,7 +649,7 @@ class TravelPayoutsAffiliateService {
         let createRequest = CreateLinksRequest(
             trs: trs,
             marker: marker,
-            shorten: true,
+            shorten: shorten,
             links: [linkRequest]
         )
         
