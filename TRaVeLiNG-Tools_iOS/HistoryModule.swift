@@ -313,24 +313,24 @@ struct AffiliateHistoryListView: View {
                                             }
                                         }
                                         
+                                        if let kiwiUrl = record.kiwiShortUrl {
+                                            actionButton(label: "kiwi", color: .green) {
+                                                UIPasteboard.general.string = kiwiUrl
+                                                showCopyFeedback = "kiwiリンクをコピーしました"
+                                            }
+                                        }
+
                                         if let tripUrl = record.tripShortUrl {
-                                            actionButton(label: "Trip com", color: .blue) {
+                                            actionButton(label: "Trip", color: .blue) {
                                                 UIPasteboard.general.string = tripUrl
-                                                showCopyFeedback = "Trip comリンクをコピーしました"
+                                                showCopyFeedback = "Tripリンクをコピーしました"
                                             }
                                         }
                                         
                                         if let travelokaUrl = record.travelokaShortUrl {
-                                            actionButton(label: "Traveloka", color: .cyan) {
+                                            actionButton(label: "トラベロカ", color: .cyan) {
                                                 UIPasteboard.general.string = travelokaUrl
-                                                showCopyFeedback = "Travelokaリンクをコピーしました"
-                                            }
-                                        }
-                                        
-                                        if let kiwiUrl = record.kiwiShortUrl {
-                                            actionButton(label: "Kiwi com", color: .green) {
-                                                UIPasteboard.general.string = kiwiUrl
-                                                showCopyFeedback = "Kiwi comリンクをコピーしました"
+                                                showCopyFeedback = "トラベロカリンクをコピーしました"
                                             }
                                         }
                                         

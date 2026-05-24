@@ -67,57 +67,49 @@ struct SkyscannerAffiliateView: View {
                     .cornerRadius(12)
                     
                     // パートナー選択
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text("パートナー選択")
                                 .font(.headline)
                             Spacer()
-                        }
-                        
-                        VStack(spacing: 12) {
                             Button(action: {
                                 tripComEnabled = true
                                 travelokaEnabled = true
                                 kiwiComEnabled = true
                             }) {
-                                HStack {
-                                    Image(systemName: "plus.circle.fill")
-                                    Text("全パートナーを一括選択")
-                                }
-                                .font(.subheadline.weight(.semibold))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 10)
-                                .background(Color.blue)
-                                .foregroundStyle(.white)
-                                .cornerRadius(8)
-                            }
-                            .padding(.bottom, 4)
-
-                            Toggle(isOn: $tripComEnabled) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                    Text("Trip com")
-                                        .fontWeight(.semibold)
-                                }
-                            }
-                            
-                            Toggle(isOn: $travelokaEnabled) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                    Text("Traveloka")
-                                        .fontWeight(.semibold)
-                                }
-                            }
-
-                            Toggle(isOn: $kiwiComEnabled) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                    Text("Kiwi com")
-                                        .fontWeight(.semibold)
-                                }
+                                Text("すべて選択")
+                                    .font(.caption.weight(.semibold))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(Color.blue.opacity(0.1))
+                                    .foregroundStyle(.blue)
+                                    .cornerRadius(6)
                             }
                         }
-                        .padding(8)
+                        
+                        HStack(spacing: 12) {
+                            Toggle(isOn: $kiwiComEnabled) {
+                                Text("kiwi")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                            }
+                            .toggleStyle(CompactToggleStyle())
+
+                            Toggle(isOn: $tripComEnabled) {
+                                Text("Trip")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                            }
+                            .toggleStyle(CompactToggleStyle())
+                            
+                            Toggle(isOn: $travelokaEnabled) {
+                                Text("トラベロカ")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                            }
+                            .toggleStyle(CompactToggleStyle())
+                        }
+                        .padding(.vertical, 4)
                     }
                     .padding(12)
                     .background(Color(.systemGray6))
@@ -152,15 +144,15 @@ struct SkyscannerAffiliateView: View {
                         }
                         
                         if let shortUrl = travelokaShortenedURL {
-                            resultBox(title: "短縮URL (Traveloka)", icon: "link.circle.fill", content: shortUrl, color: .blue)
+                            resultBox(title: "短縮URL (トラベロカ)", icon: "link.circle.fill", content: shortUrl, color: .blue)
                         }
-                        
+
                         if let shortUrl = kiwiShortenedURL {
-                            resultBox(title: "短縮URL (Kiwi com)", icon: "link.circle.fill", content: shortUrl, color: .green)
+                            resultBox(title: "短縮URL (kiwi)", icon: "link.circle.fill", content: shortUrl, color: .green)
                         }
-                        
+
                         if let shortUrl = tripShortenedURL {
-                            resultBox(title: "短縮URL (Trip.com)", icon: "link.circle.fill", content: shortUrl, color: .cyan)
+                            resultBox(title: "短縮URL (Trip)", icon: "link.circle.fill", content: shortUrl, color: .cyan)
                         }
                         
                         if let shortUrl = shortenedURL {
@@ -454,16 +446,16 @@ struct SkyscannerAffiliateView: View {
         var text = ""
         
         // パートナーリンクを追加
+        if let kiwiUrl = kiwiShortUrl {
+            text += "✈️kiwiで予約\n\(kiwiUrl)\n\n"
+        }
+
         if let tripUrl = tripShortUrl {
-            text += "✈️Trip comで予約\n\(tripUrl)\n\n"
+            text += "✈️Tripで予約\n\(tripUrl)\n\n"
         }
         
         if let travelokaUrl = travelokaShortUrl {
-            text += "✈️Travelokaで予約\n\(travelokaUrl)\n\n"
-        }
-
-        if let kiwiUrl = kiwiShortUrl {
-            text += "✈️Kiwi comで予約\n\(kiwiUrl)\n\n"
+            text += "✈️トラベロカで予約\n\(travelokaUrl)\n\n"
         }
         
         // Skyscanner
@@ -679,9 +671,11 @@ class TravelPayoutsAffiliateService {
     static func getPartnerName(campaignId: Int) -> String {
         switch campaignId {
         case 632:
-            return "Traveloka"
+            return "トラベロカ"
         case 121:
-            return "Trip com"
+            return "Trip"
+        case 3791:
+            return "kiwi"
         default:
             return "パートナー"
         }
