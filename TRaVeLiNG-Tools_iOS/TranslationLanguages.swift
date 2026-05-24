@@ -51,7 +51,6 @@ let supportedLanguages: [Language] = [
 func detectLanguageCode(_ text: String) -> String? {
     let tagger = NSLinguisticTagger(tagSchemes: [.language], options: 0)
     tagger.string = text
-    let range = NSRange(text.startIndex..<text.endIndex, in: text)
     let tag = tagger.tag(at: 0, scheme: .language, tokenRange: nil, sentenceRange: nil)
     return tag?.rawValue
 }

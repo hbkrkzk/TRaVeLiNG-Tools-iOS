@@ -298,6 +298,7 @@ struct SkyscannerAffiliateView: View {
                 // パートナーURLの生成
                 var tripShortUrl: String?
                 var travelokaShortUrl: String?
+                var kiwiShortUrl: String?
                 
                 if tripComEnabled {
                     if let tripUrl = generateTripURL(info: info) {

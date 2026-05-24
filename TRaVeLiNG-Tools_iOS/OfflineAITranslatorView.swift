@@ -592,8 +592,6 @@ struct OfflineAITranslatorView: View {
                         return
                     }
                     
-                    let sourceLangName = sourceLanguage.nativeName
-                    let targetLangName = targetLanguage.nativeName
                     let sourceLangEn = sourceLanguage.name
                     let targetLangEn = targetLanguage.name
                     
@@ -614,7 +612,7 @@ struct OfflineAITranslatorView: View {
                     )
                     
                     let responseContent = response.content.trimmingCharacters(in: .whitespacesAndNewlines)
-                    var lines = responseContent.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                    let lines = responseContent.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
                     
                     let translatedContent = lines.first?
                         .replacingOccurrences(of: "**", with: "")
