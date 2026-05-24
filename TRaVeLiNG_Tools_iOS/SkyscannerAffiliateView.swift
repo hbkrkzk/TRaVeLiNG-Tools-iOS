@@ -108,7 +108,6 @@ struct SkyscannerAffiliateView: View {
                                     .fontWeight(.semibold)
                             }
                             .toggleStyle(CompactToggleStyle())
-
                         }
                         .padding(.vertical, 4)
                     }
@@ -317,7 +316,6 @@ struct SkyscannerAffiliateView: View {
                     tripShortUrl: tripShortUrl,
                     travelokaShortUrl: travelokaShortUrl,
                     kiwiShortUrl: kiwiShortUrl,
-                    agodaShortUrl: agodaShortUrl,
                     skyscannerShortUrl: shortUrl
                 )
                 
@@ -343,7 +341,6 @@ struct SkyscannerAffiliateView: View {
                         tripShortUrl: tripShortUrl,
                         travelokaShortUrl: travelokaShortUrl,
                         kiwiShortUrl: kiwiShortUrl,
-                        agodaShortUrl: agodaShortUrl,
                         shareText: shareText
                     )
                 }
@@ -442,6 +439,20 @@ struct SkyscannerAffiliateView: View {
         
         return urlString
     }
+    
+    private func generateShareText(
+        isRoundTrip: Bool,
+        tripShortUrl: String?,
+        travelokaShortUrl: String?,
+        kiwiShortUrl: String?,
+        skyscannerShortUrl: String
+    ) -> String {
+        var text = ""
+        
+        // パートナーリンクを追加
+        if let kiwiUrl = kiwiShortUrl {
+            text += "✈️kiwiで予約\n\(kiwiUrl)\n\n"
+        }
 
         if let tripUrl = tripShortUrl {
             text += "✈️Tripで予約\n\(tripUrl)\n\n"
@@ -450,6 +461,67 @@ struct SkyscannerAffiliateView: View {
         if let travelokaUrl = travelokaShortUrl {
             text += "✈️トラベロカで予約\n\(travelokaUrl)\n\n"
         }
+        
+        // Skyscanner
+        let tripTypeLabel = isRoundTrip ? "往復" : "片道"
+        text += "🔍️スカイスキャナーで検索\n\(tripTypeLabel): \(skyscannerShortUrl)\n\n"
+        
+        // パートナー選択がない場合のみ楽天モバイルを表示
+        if tripShortUrl == nil && travelokaShortUrl == nil && kiwiShortUrl == nil {
+            text += "📲楽天モバイル\n"
+            text += "🌏海外データ2GB/月\n"
+            text += "▽乗換で1.4万、新規で1.1万ptゲット\n"
+            text += "https://x.gd/6LqKk\n\n"
+        }
+        
+        text += "💳️セゾンプラチナビジネス\n"
+        text += "✅PP無料付帯\n"
+        text += "▽特別招待ー初年度無料＆アマギフ1.2万\n"
+        text += "https://x.gd/TYSba"
+        
+        return text
+    }
+    
+    private func formatDateForTrip(_ dateStr: String) -> String {
+        if dateStr.count == 10 && dateStr.contains("-") { return dateStr }
+        if dateStr.count == 6 { return "20\(dateStr.prefix(2))-\(dateStr.dropFirst(2).prefix(2))-\(dateStr.suffix(2))" }
+        return dateStr
+    }
+    
+    private func formatDateForTraveloka(_ dateStr: String) -> String {
+        let parts = dateStr.components(separatedBy: "-")
+        if parts.count == 3 {
+            let y = parts[0]
+            let m = Int(parts[1]) ?? 1
+            let d = parts[2]
+            return "\(d)-\(m)-\(y)"
+        }
+        return dateStr
+    }
+    
+    private func pasteFromClipboard() {
+        if let content = UIPasteboard.general.string {
+            skyscannerLink = content
+        }
+    }
+    
+    private func copyToClipboard(_ content: String) {
+        UIPasteboard.general.string = content
+    }
+    
+    private func parseSkyscannerLinkAsync(_ link: String) async -> SkyscannerFlightInfo? {
+        return try? await SkyscannerURLService.parseSkyscannerLinkAsync(link)
+    }
+    
+    private func shortenURLAsync(_ url: String) async -> String? {
+        return try? await SkyscannerURLService.shortenURLAsync(url)
+    }
+    
+    private func generatePartnerAffiliateLink(url: String, campaignId: Int) async -> String? {
+        let result = try? await TravelPayoutsAffiliateService.generateAffiliateLink(from: url)
+        return result?.partnerURL
+    }
+}
 
 // MARK: - Share Text Settings View
 
@@ -512,8 +584,6 @@ struct ShareTextSettingsView: View {
         onewayTemplate = ShareTextService.shared.getOnewayTemplate()
     }
 }
-
-// MARK: - History Module
 
 // MARK: - TravelPayouts Affiliate Service
 
@@ -663,13 +733,6 @@ class TravelPayoutsAffiliateService {
         if campaignId == 3791 {
             let encodedUrl = url.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? url
             let partnerURL = "https://c111.travelpayouts.com/click?shmarker=\(marker)&promo_id=3791&source_type=customlink&type=click&custom_url=\(encodedUrl)"
-            return (partnerURL: partnerURL, campaignId: campaignId)
-        }
-
-        // Agoda の場合もカスタムリンク形式を使用
-        if campaignId == 2854 {
-            let encodedUrl = url.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? url
-            let partnerURL = "https://c104.travelpayouts.com/click?shmarker=\(marker)&promo_id=2854&source_type=customlink&type=click&custom_url=\(encodedUrl)"
             return (partnerURL: partnerURL, campaignId: campaignId)
         }
         
