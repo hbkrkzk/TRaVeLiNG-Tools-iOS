@@ -383,8 +383,12 @@ struct SkyscannerAffiliateView: View {
         let isRoundTrip = info.isRoundTrip
         let rdateValue = isRoundTrip ? formatDateForTrip(info.returnDate ?? info.departureDate) : formatDateForTrip(info.departureDate)
         
+        // 常に3レターに変換 (TYOA -> TYO)
+        let departure = String(info.departure.prefix(3)).lowercased()
+        let arrival = String(info.arrival.prefix(3)).lowercased()
+        
         // URLコンポーネントの順序を重視
-        let urlString = "\(baseURL)?dcity=\(info.departure)&acity=\(info.arrival)&ddate=\(formatDateForTrip(info.departureDate))&rdate=\(rdateValue)&triptype=\(isRoundTrip ? "rt" : "ow")&class=y&lowpricesource=searchform&quantity=1&searchboxarg=t&nonstoponly=off&locale=ja-JP&curr=JPY"
+        let urlString = "\(baseURL)?dcity=\(departure)&acity=\(arrival)&ddate=\(formatDateForTrip(info.departureDate))&rdate=\(rdateValue)&triptype=\(isRoundTrip ? "rt" : "ow")&class=y&lowpricesource=searchform&quantity=1&searchboxarg=t&nonstoponly=off&locale=ja-JP&curr=JPY"
         
         return urlString
     }
@@ -394,9 +398,20 @@ struct SkyscannerAffiliateView: View {
         let baseURL = "https://www.traveloka.com/ja-jp/flight"
         let endpoint = isRoundTrip ? "fulltwosearch" : "fullsearch"
         
-        // BJSAはTravelokaでハンドルできないためPEKに変換
-        let departure = info.departure.lowercased() == "bjsa" ? "PEK" : info.departure
-        let arrival = info.arrival.lowercased() == "bjsa" ? "PEK" : info.arrival
+        // 空港コードの処理
+        func formatCode(_ code: String) -> String {
+            let upper = code.uppercased()
+            // BJSAはPEKに変換
+            if upper == "BJSA" { return "PEK" }
+            // 4レターで末尾がAならそのまま、それ以外で4レターなら3レターに
+            if upper.count == 4 && !upper.hasSuffix("A") {
+                return String(upper.prefix(3))
+            }
+            return upper
+        }
+        
+        let departure = formatCode(info.departure)
+        let arrival = formatCode(info.arrival)
         
         let depDate = formatDateForTraveloka(info.departureDate)
         let retDate = isRoundTrip ? formatDateForTraveloka(info.returnDate ?? info.departureDate) : "NA"
@@ -408,8 +423,9 @@ struct SkyscannerAffiliateView: View {
     }
 
     private func generateKiwiURL(info: SkyscannerFlightInfo) -> String? {
-        let departure = info.departure.uppercased()
-        let arrival = info.arrival.uppercased()
+        // 常に3レターに変換 (TYOA -> TYO)
+        let departure = String(info.departure.prefix(3)).uppercased()
+        let arrival = String(info.arrival.prefix(3)).uppercased()
         let departDate = info.departureDate // yyyy-mm-dd
         
         var urlString = "https://www.kiwi.com/deep?from=\(departure)&to=\(arrival)&departure=\(departDate)"
