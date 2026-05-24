@@ -333,6 +333,87 @@ struct AffiliateHistoryListView: View {
                                                 showCopyFeedback = "トラベロカリンクをコピーしました"
                                             }
                                         }
+                                        
+                                        actionButton(label: "統計用", color: .purple) {
+                                            UIPasteboard.general.string = record.statsURL
+                                            showCopyFeedback = "統計用URLをコピーしました"
+                                        }
+                                        
+                                        actionButton(label: "元URL", color: .gray) {
+                                            UIPasteboard.general.string = record.affiliateURL
+                                            showCopyFeedback = "アフィリエイトURLをコピーしました"
+                                        }
+                                        
+                                        Button(action: { recordToDelete = record; showDeleteConfirm = true }) {
+                                            Image(systemName: "trash")
+                                                .font(.caption2)
+                                                .padding(8)
+                                                .background(Color.red.opacity(0.1))
+                                                .foregroundStyle(.red)
+                                                .cornerRadius(4)
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(12)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                            .listRowInsets(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                        }
+                    }
+                    .listStyle(.plain)
+                }
+                
+                if !filteredRecords.isEmpty {
+                    Button(action: { recordToDelete = nil; showDeleteConfirm = true }) {
+                        HStack { Image(systemName: "trash"); Text("すべて削除") }
+                            .frame(maxWidth: .infinity).frame(height: 44).background(Color.red.opacity(0.1)).foregroundStyle(.red).cornerRadius(8)
+                    }.padding(12)
+                }
+            }
+            .navigationTitle("生成履歴")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .toast(message: $showCopyFeedback)
+        .alert("削除確認", isPresented: $showDeleteConfirm) {
+            Button("キャンセル", role: .cancel) { }
+            Button("削除", role: .destructive) {
+                if let record = recordToDelete {
+                    historyManager.deleteRecord(record)
+                } else {
+                    historyManager.deleteAll()
+                }
+                recordToDelete = nil
+            }
+        } message: {
+            Text(recordToDelete != nil ? "この記録を削除しますか?" : "すべての履歴を削除しますか?")
+        }
+    }
+    
+    @ViewBuilder
+    private func actionButton(label: String, color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: {
+            action()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                showCopyFeedback = nil
+            }
+        }) {
+            Text(label)
+                .font(.caption2.weight(.semibold))
+                .padding(.horizontal, 10)
+                .frame(height: 32)
+                .background(color.opacity(0.1))
+                .foregroundStyle(color)
+                .cornerRadius(6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(color.opacity(0.3), lineWidth: 1)
+                )
+        }
+    }
+}
 
 extension View {
     func toast(message: Binding<String?>) -> some View {
