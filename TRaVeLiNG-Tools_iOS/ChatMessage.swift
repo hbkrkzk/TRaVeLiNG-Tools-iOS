@@ -33,7 +33,21 @@ struct ChatMessage: Identifiable, Equatable, Codable {
 struct MessageView: View {
     let message: ChatMessage
     let isResponding: Bool
-    
+
+    private var attributedText: AttributedString {
+        if let attributed = try? AttributedString(
+            markdown: message.text,
+            options: AttributedString.MarkdownParsingOptions(
+                allowsExtendedAttributes: true,
+                interpretedSyntax: .inlineOnlyPreservingWhitespace,
+                failurePolicy: .returnPartiallyParsedIfPossible
+            )
+        ) {
+            return attributed
+        }
+        return AttributedString(message.text)
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             if message.role == .assistant {
@@ -42,9 +56,9 @@ struct MessageView: View {
                     .foregroundColor(.blue)
                     .frame(width: 28, height: 28)
                     .padding(.top, 4)
-                
+
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(message.text)
+                    Text(attributedText)
                         .textSelection(.enabled)
                     
                     if isResponding && message.text.isEmpty {

@@ -32,9 +32,9 @@ struct OfflineAIChatView: View {
     }
     
     // Model State
-    @State private var session: LanguageModelSession?
+    @State private var session: Any? // LanguageModelSession?
     @State private var streamingTask: Task<Void, Never>?
-    @State private var model = SystemLanguageModel.default
+    @State private var model: Any? // SystemLanguageModel.default
     
     // Settings
     @AppStorage("offlineChat_useStreaming") private var useStreaming = ChatAppSettings.useStreaming
@@ -61,8 +61,13 @@ struct OfflineAIChatView: View {
                         .padding()
                         .padding(.bottom, 90)
                     }
-                    .onChange(of: messages.count) {
-                        scrollToBottom(with: proxy)
+                    .onChange(of: messages) { _ in
+                        scrollWithDelay(proxy: proxy)
+                    }
+                    .onChange(of: isResponding) { _ in
+                        if isResponding {
+                            scrollWithDelay(proxy: proxy)
+                        }
                     }
                     .onAppear {
                         loadChatHistory()
@@ -101,7 +106,7 @@ struct OfflineAIChatView: View {
     
     /// Floating input field with send/stop button
     private var inputField: some View {
-        ZStack {
+        HStack(spacing: 8) {
             TextField("何か質問があれば入力してください", text: $inputText, axis: .vertical)
                 .textFieldStyle(.plain)
                 .lineLimit(1...5)
@@ -112,23 +117,21 @@ struct OfflineAIChatView: View {
                         handleSendOrStop()
                     }
                 }
-                .padding(16)
-            
-            HStack {
-                Spacer()
-                Button(action: handleSendOrStop) {
-                    Image(systemName: isResponding ? "stop.circle.fill" : "arrow.up.circle.fill")
-                        .font(.system(size: 30, weight: .bold))
-                        .foregroundStyle(isSendButtonDisabled ? Color.gray.opacity(0.6) : .blue)
-                }
-                .disabled(isSendButtonDisabled)
-                .animation(.easeInOut(duration: 0.2), value: isResponding)
-                .animation(.easeInOut(duration: 0.2), value: isSendButtonDisabled)
-                .padding(.trailing, 8)
+                .padding(12)
+
+            Button(action: handleSendOrStop) {
+                Image(systemName: isResponding ? "stop.circle.fill" : "arrow.up.circle.fill")
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundStyle(isSendButtonDisabled ? Color.gray.opacity(0.6) : .blue)
             }
+            .disabled(isSendButtonDisabled)
+            .animation(.easeInOut(duration: 0.2), value: isResponding)
+            .animation(.easeInOut(duration: 0.2), value: isSendButtonDisabled)
+            .padding(.horizontal, 4)
         }
         .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
+        .padding(.horizontal, 12)
     }
     
     private var isSendButtonDisabled: Bool {
@@ -178,8 +181,17 @@ struct OfflineAIChatView: View {
         if isResponding {
             stopStreaming()
         } else {
-            guard model.isAvailable else {
-                showError(message: "言語モデルが利用できません。理由: \(availabilityDescription(for: model.availability))")
+            if #available(iOS 26.0, *) {
+                guard let model = model as? SystemLanguageModel, model.isAvailable else {
+                    if let model = model as? SystemLanguageModel {
+                        showError(message: "言語モデルが利用できません。理由: \(availabilityDescription(for: model.availability))")
+                    } else {
+                        showError(message: "言語モデルが利用できません")
+                    }
+                    return
+                }
+            } else {
+                showError(message: "チャット機能はiOS 26以上が必要です")
                 return
             }
             sendMessage()
@@ -187,6 +199,9 @@ struct OfflineAIChatView: View {
     }
     
     private func sendMessage() {
+        // 既にレスポンス中の場合は何もしない
+        guard !isResponding else { return }
+
         if currentSessionId == nil {
             startNewSession(withTitle: String(inputText.prefix(20)))
         }
@@ -223,19 +238,31 @@ struct OfflineAIChatView: View {
                     return
                 }
                 
-                let options = GenerationOptions(temperature: temperature)
-                
-                if useStreaming {
-                    let stream = currentSession.streamResponse(to: prompt, options: options)
-                    for try await snapshot in stream {
+                if #available(iOS 26.0, *) {
+                    guard let modelSession = currentSession as? LanguageModelSession else {
+                        showError(message: "セッションを作成できませんでした。")
+                        isResponding = false
+                        return
+                    }
+                    
+                    let options = GenerationOptions(temperature: temperature)
+                    
+                    if useStreaming {
+                        let stream = modelSession.streamResponse(to: prompt, options: options)
+                        for try await snapshot in stream {
 #if os(iOS)
-                        hapticStreamGenerator.selectionChanged()
+                            hapticStreamGenerator.selectionChanged()
 #endif
-                        updateLastMessage(with: snapshot.content)
+                            updateLastMessage(with: snapshot.content)
+                        }
+                    } else {
+                        let response = try await modelSession.respond(to: prompt, options: options)
+                        updateLastMessage(with: response.content)
                     }
                 } else {
-                    let response = try await currentSession.respond(to: prompt, options: options)
-                    updateLastMessage(with: response.content)
+                    showError(message: "チャット機能はiOS 26以上が必要です")
+                    isResponding = false
+                    return
                 }
             } catch is CancellationError {
                 // User cancelled generation
@@ -248,24 +275,35 @@ struct OfflineAIChatView: View {
         }
     }
     
+    @MainActor
     private func stopStreaming() {
         streamingTask?.cancel()
+        streamingTask = nil
+        isResponding = false
     }
     
     @MainActor
     private func updateLastMessage(with text: String) {
-        if let index = currentSessionIndex, !sessions[index].messages.isEmpty {
-            let lastMessageIndex = sessions[index].messages.count - 1
-            sessions[index].messages[lastMessageIndex].text = text
-            sessions[index].updatedAt = Date()
-            saveChatHistory()
-        }
+        guard let index = currentSessionIndex, !sessions[index].messages.isEmpty else { return }
+
+        var messages = sessions[index].messages
+        var lastMessage = messages[messages.count - 1]
+        lastMessage.text = text
+        messages[messages.count - 1] = lastMessage
+
+        sessions[index].messages = messages
+        sessions[index].updatedAt = Date()
+        saveChatHistory()
     }
     
     // MARK: - Session & Helpers
     
-    private func createSession() -> LanguageModelSession {
-        return LanguageModelSession(instructions: systemInstructions)
+    private func createSession() -> Any? {
+        if #available(iOS 26.0, *) {
+            return LanguageModelSession(instructions: systemInstructions)
+        } else {
+            return nil
+        }
     }
     
     private func resetConversation() {
@@ -281,23 +319,31 @@ struct OfflineAIChatView: View {
         saveChatHistory()
     }
     
-    private func availabilityDescription(for availability: SystemLanguageModel.Availability) -> String {
-        switch availability {
-        case .available:
-            return "利用可能"
-        case .unavailable(let reason):
-            switch reason {
-            case .deviceNotEligible:
-                return "デバイスが対応していません"
-            case .appleIntelligenceNotEnabled:
-                return "設定でApple Intelligenceが有効になっていません"
-            case .modelNotReady:
-                return "モデルアセットがダウンロードされていません"
-            @unknown default:
-                return "不明な理由"
+    private func availabilityDescription(for availability: Any) -> String {
+        if #available(iOS 26.0, *) {
+            guard let avail = availability as? SystemLanguageModel.Availability else {
+                return "不明な利用可能状態"
             }
-        @unknown default:
-            return "不明な利用可能状態"
+            
+            switch avail {
+            case .available:
+                return "利用可能"
+            case .unavailable(let reason):
+                switch reason {
+                case .deviceNotEligible:
+                    return "デバイスが対応していません"
+                case .appleIntelligenceNotEnabled:
+                    return "設定でApple Intelligenceが有効になっていません"
+                case .modelNotReady:
+                    return "モデルアセットがダウンロードされていません"
+                @unknown default:
+                    return "不明な理由"
+                }
+            @unknown default:
+                return "不明な利用可能状態"
+            }
+        } else {
+            return "この機能はiOS 26以上が必要です"
         }
     }
     
@@ -312,8 +358,23 @@ struct OfflineAIChatView: View {
     
     private func scrollToBottom(with proxy: ScrollViewProxy) {
         guard let lastMessage = messages.last else { return }
-        withAnimation {
-            proxy.scrollTo(lastMessage.id, anchor: .bottom)
+        proxy.scrollTo(lastMessage.id, anchor: .bottom)
+    }
+
+    private func scrollWithDelay(proxy: ScrollViewProxy) {
+        // メインスレッドで即座にスクロール
+        scrollToBottom(with: proxy)
+
+        // 少し遅延させて再度スクロール（レイアウト計算後）
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
+            scrollToBottom(with: proxy)
+        }
+
+        // もう一度遅延させてスクロール（より確実な表示のため）
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 150_000_000) // 150ms
+            scrollToBottom(with: proxy)
         }
     }
     

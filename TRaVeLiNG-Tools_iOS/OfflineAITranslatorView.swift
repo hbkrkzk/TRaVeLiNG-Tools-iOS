@@ -12,7 +12,7 @@ import Speech
 
 // MARK: - Text-to-Speech Manager
 
-class TTSManager: NSObject, AVSpeechSynthesizerDelegate {
+class TTSManager: NSObject, AVSpeechSynthesizerDelegate, @unchecked Sendable {
     static let shared = TTSManager()
     
     private let synthesizer = AVSpeechSynthesizer()
@@ -295,9 +295,9 @@ struct OfflineAITranslatorView: View {
     @State private var baseRecordingText = ""
     
     // Model State
-    @State private var session: LanguageModelSession?
+    @State private var session: Any? // LanguageModelSession?
     @State private var translationTask: Task<Void, Never>?
-    @State private var model = SystemLanguageModel.default
+    @State private var model: Any? // SystemLanguageModel.default
     
     // Speech & TTS
     private let ttsManager = TTSManager.shared
@@ -496,7 +496,7 @@ struct OfflineAITranslatorView: View {
                 .padding(8)
                 .background(Color(.tertiarySystemBackground))
                 .cornerRadius(8)
-                .onChange(of: sourceText) {
+                .onChange(of: sourceText) { _ in
                     detectSourceLanguage()
                 }
             
@@ -627,10 +627,17 @@ struct OfflineAITranslatorView: View {
             stopTranslation()
         } else {
             if speechRecognizer.isRecording { speechRecognizer.stopRecording() }
-            guard model.isAvailable else {
-                showError(message: "言語モデルが利用できません")
+            
+            if #available(iOS 26.0, *) {
+                guard let model = model as? SystemLanguageModel, model.isAvailable else {
+                    showError(message: "言語モデルが利用できません")
+                    return
+                }
+            } else {
+                showError(message: "この機能はiOS 26以上が必要です")
                 return
             }
+            
             hideKeyboard()
             translate()
         }
@@ -644,53 +651,59 @@ struct OfflineAITranslatorView: View {
         
         translationTask = Task {
             do {
-                if session == nil {
-                    session = LanguageModelSession(instructions: createTranslationInstruction())
+                if #available(iOS 26.0, *) {
+                    // iOS 26+ specific code
+                    if session == nil {
+                        session = LanguageModelSession(instructions: createTranslationInstruction())
+                    }
+                    
+                    guard let currentSession = session as? LanguageModelSession else {
+                        showError(message: "セッションを作成できませんでした")
+                        isTranslating = false
+                        return
+                    }
+                    
+                    let sourceLangName = sourceLanguage.nativeName
+                    let targetLangName = targetLanguage.nativeName
+                    let sourceLangEn = sourceLanguage.name
+                    let targetLangEn = targetLanguage.name
+                    
+                    let translationPrompt = """
+                    Translate the following text from \(sourceLangEn) to \(targetLangEn).
+                    Return exactly two lines:
+                    Line 1: Only the translated text.
+                    Line 2: Only the alphabet pronunciation (romanization/pinyin) of the translated text. If the target language naturally uses the Latin alphabet, leave Line 2 empty.
+                    Do not include any explanations, labels, or additional commentary.
+                    
+                    Text to translate:
+                    \(sourceText)
+                    """
+                    
+                    let response = try await currentSession.respond(
+                        to: translationPrompt,
+                        options: GenerationOptions(temperature: 0.2)
+                    )
+                    
+                    let responseContent = response.content.trimmingCharacters(in: .whitespacesAndNewlines)
+                    var lines = responseContent.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                    
+                    let translatedContent = lines.first?
+                        .replacingOccurrences(of: "**", with: "")
+                        .replacingOccurrences(of: "##", with: "") ?? ""
+                    
+                    let rawPronunciation = lines.count > 1 ? lines.dropFirst().joined(separator: " ") : ""
+                    let cleanPronunciation = rawPronunciation
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                        .replacingOccurrences(of: "**", with: "")
+                        .replacingOccurrences(of: "##", with: "")
+                    
+                    translatedText = translatedContent
+                    pronunciationText = cleanPronunciation
+                    saveTranslationHistory()
+                } else {
+                    // iOS 16-25: Provide fallback or show message
+                    showError(message: "高度な翻訳機能はiOS 26以上が必要です")
                 }
-                
-                guard let currentSession = session else {
-                    showError(message: "セッションを作成できませんでした")
-                    isTranslating = false
-                    return
-                }
-                
-                let sourceLangName = sourceLanguage.nativeName
-                let targetLangName = targetLanguage.nativeName
-                let sourceLangEn = sourceLanguage.name
-                let targetLangEn = targetLanguage.name
-                
-                let translationPrompt = """
-                Translate the following text from \(sourceLangEn) to \(targetLangEn).
-                Return exactly two lines:
-                Line 1: Only the translated text.
-                Line 2: Only the alphabet pronunciation (romanization/pinyin) of the translated text. If the target language naturally uses the Latin alphabet, leave Line 2 empty.
-                Do not include any explanations, labels, or additional commentary.
-                
-                Text to translate:
-                \(sourceText)
-                """
-                
-                let response = try await currentSession.respond(
-                    to: translationPrompt,
-                    options: GenerationOptions(temperature: 0.2)
-                )
-                
-                let responseContent = response.content.trimmingCharacters(in: .whitespacesAndNewlines)
-                var lines = responseContent.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-                
-                let translatedContent = lines.first?
-                    .replacingOccurrences(of: "**", with: "")
-                    .replacingOccurrences(of: "##", with: "") ?? ""
-                
-                let rawPronunciation = lines.count > 1 ? lines.dropFirst().joined(separator: " ") : ""
-                let cleanPronunciation = rawPronunciation
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .replacingOccurrences(of: "**", with: "")
-                    .replacingOccurrences(of: "##", with: "")
-                
-                translatedText = translatedContent
-                pronunciationText = cleanPronunciation
-                saveTranslationHistory()
             } catch is CancellationError {
                 // User cancelled
             } catch {

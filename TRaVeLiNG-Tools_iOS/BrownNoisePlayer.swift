@@ -94,29 +94,37 @@ class BrownNoisePlayerService: NSObject, ObservableObject {
     }
     
     func startPlayback(duration: TimeInterval = 0) {
+        // すでに再生中の場合は何もしない
+        guard !isPlaying else { return }
+
         // ファイルを検索（Resourcesフォルダ内も確認）
         var audioURL: URL?
-        
+
         audioURL = Bundle.main.url(forResource: "brownnoise_30min", withExtension: "m4a")
-        
+
         if audioURL == nil {
             audioURL = Bundle.main.url(forResource: "brownnoise_30min", withExtension: "m4a", subdirectory: "Resources")
         }
-        
+
         guard let audioURL = audioURL else {
             print("❌ オーディオファイルが見つかりません")
             return
         }
-        
+
         do {
             print("📁 オーディオファイルURL: \(audioURL)")
-            audioPlayer = try AVAudioPlayer(contentsOf: audioURL)
-            audioPlayer?.delegate = self
-            audioPlayer?.volume = 0.5
-            audioPlayer?.enableRate = false
-            audioPlayer?.numberOfLoops = -1
+
+            // 既にplayerがある場合は再利用、ない場合は新規作成
+            if audioPlayer == nil {
+                audioPlayer = try AVAudioPlayer(contentsOf: audioURL)
+                audioPlayer?.delegate = self
+                audioPlayer?.volume = 0.5
+                audioPlayer?.enableRate = false
+                audioPlayer?.numberOfLoops = -1
+            }
+
             audioPlayer?.play()
-            
+
             DispatchQueue.main.async {
                 self.isPlaying = true
                 self.currentTimerDuration = Int(duration)
@@ -124,13 +132,15 @@ class BrownNoisePlayerService: NSObject, ObservableObject {
                 self.elapsedSeconds = 0
                 self.timerStartTime = Date()
             }
-            
+
             setupDisplayLink()
-            startTimer(duration: duration)
+            if duration > 0 {
+                startTimer(duration: duration)
+            }
             startBackgroundTask()
             updateNowPlayingInfo()
-            
-            print("✅ 再生開始")
+
+            print("✅ 再生開始 (タイマー: \(Int(duration))秒)")
         } catch {
             print("❌ オーディオ再生エラー: \(error.localizedDescription)")
         }
@@ -153,12 +163,14 @@ class BrownNoisePlayerService: NSObject, ObservableObject {
         audioPlayer.play()
         DispatchQueue.main.async {
             self.isPlaying = true
-            if self.timerStartTime == nil {
+            if self.timerStartTime == nil && self.currentTimerDuration > 0 {
                 self.timerStartTime = Date()
             }
         }
         setupDisplayLink()
-        startTimer(duration: Double(currentTimerDuration))
+        if currentTimerDuration > 0 {
+            startTimer(duration: Double(currentTimerDuration))
+        }
         updateNowPlayingInfo()
         print("▶️ 再開")
     }
@@ -219,23 +231,31 @@ class BrownNoisePlayerService: NSObject, ObservableObject {
     
     private func startTimer(duration: TimeInterval) {
         guard duration > 0 else { return }
-        
+
+        // 既存のタイマーを停止
         stopTimer()
-        
+
+        // 開始時刻をリセット
+        timerStartTime = Date()
+
         timerTask = Task {
-            let startTime = Date()
-            
-            while !Task.isCancelled && isPlaying {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1秒
+
+                let startTime = timerStartTime
+
+                guard let startTime = startTime else {
+                    break
+                }
+
                 let elapsed = Date().timeIntervalSince(startTime)
-                
+
                 if elapsed >= duration {
                     await MainActor.run {
                         self.stop()
                     }
                     break
                 }
-                
-                try? await Task.sleep(nanoseconds: 100_000_000)
             }
         }
     }
@@ -271,10 +291,22 @@ extension BrownNoisePlayerService: AVAudioPlayerDelegate {
 
 struct BrownNoiseTimerOption: Hashable, Equatable {
     let minutes: Int
-    
+    let seconds: Int
+
+    init(minutes: Int, seconds: Int = 0) {
+        self.minutes = minutes
+        self.seconds = seconds
+    }
+
+    var totalSeconds: Int {
+        return minutes * 60 + seconds
+    }
+
     var displayText: String {
-        if minutes == 0 {
+        if totalSeconds == 0 {
             return "無制限"
+        } else if totalSeconds < 60 {
+            return "\(totalSeconds)秒"
         } else if minutes < 60 {
             return "\(minutes)分"
         } else {
@@ -287,13 +319,14 @@ struct BrownNoiseTimerOption: Hashable, Equatable {
             }
         }
     }
-    
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(minutes)
+        hasher.combine(seconds)
     }
-    
+
     static func == (lhs: BrownNoiseTimerOption, rhs: BrownNoiseTimerOption) -> Bool {
-        lhs.minutes == rhs.minutes
+        lhs.minutes == rhs.minutes && lhs.seconds == rhs.seconds
     }
 }
 
@@ -302,15 +335,20 @@ class BrownNoiseTimerCalculator {
         var options: [BrownNoiseTimerOption] = [
             BrownNoiseTimerOption(minutes: 0)
         ]
-        
+
+        // デバッグ用: 15秒タイマーを追加
+#if DEBUG
+        options.append(BrownNoiseTimerOption(minutes: 0, seconds: 15))
+#endif
+
         for i in stride(from: 15, through: 120, by: 15) {
             options.append(BrownNoiseTimerOption(minutes: i))
         }
-        
+
         for i in stride(from: 150, through: 720, by: 30) {
             options.append(BrownNoiseTimerOption(minutes: i))
         }
-        
+
         return options
     }
 }
@@ -415,7 +453,7 @@ struct BrownNoisePlayerView: View {
                 }
             } else {
                 Picker("タイマー", selection: $selectedTimerOption) {
-                    ForEach(timerOptions, id: \.minutes) { option in
+                    ForEach(timerOptions, id: \.self) { option in
                         Text(option.displayText).tag(option)
                     }
                 }
@@ -433,7 +471,7 @@ struct BrownNoisePlayerView: View {
             // スタートボタン
             Button(action: {
                 audioService.startPlayback(
-                    duration: Double(selectedTimerOption.minutes * 60)
+                    duration: Double(selectedTimerOption.totalSeconds)
                 )
             }) {
                 Image(systemName: "play.fill")

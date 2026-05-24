@@ -44,7 +44,7 @@ struct ToolTextField: View {
                 .textFieldStyle(.roundedBorder)
                 .font(.body)
                 .keyboardType(keyboardType)
-                .onChange(of: text) { _, newValue in
+                .onChange(of: text) { newValue in
                     text = onChange?(newValue) ?? newValue
                 }
         }

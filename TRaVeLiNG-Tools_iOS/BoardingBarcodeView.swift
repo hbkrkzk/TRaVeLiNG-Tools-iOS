@@ -78,17 +78,17 @@ struct BoardingBarcodeView: View {
     private var flightInfoSection: some View {
         Section("区間・便情報") {
             LabeledInputField(title: "出発地", text: $from, example: "HND", field: .from, focusedField: $focusedField)
-                .onChange(of: from) {
+                .onChange(of: from) { _ in
                     from = String(from.uppercased().prefix(3))
                 }
 
             LabeledInputField(title: "到着地", text: $to, example: "NYC", field: .to, focusedField: $focusedField)
-                .onChange(of: to) {
+                .onChange(of: to) { _ in
                     to = String(to.uppercased().prefix(3))
                 }
 
             LabeledInputField(title: "運航会社コード", text: $operatorCode, example: "NH", field: .operatorCode, focusedField: $focusedField)
-                .onChange(of: operatorCode) {
+                .onChange(of: operatorCode) { _ in
                     operatorCode = String(operatorCode.uppercased().prefix(3))
                 }
 
@@ -96,7 +96,7 @@ struct BoardingBarcodeView: View {
             let flightWithKeyboard = flightView.keyboardType(.numbersAndPunctuation)
             
             flightWithKeyboard
-                .onChange(of: flightNum) {
+                .onChange(of: flightNum) { _ in
                     flightNum = String(flightNum.prefix(5))
                 }
 
@@ -113,7 +113,7 @@ struct BoardingBarcodeView: View {
             }
 
             LabeledInputField(title: "座席番号", text: $seat, example: "23A", field: .seat, focusedField: $focusedField)
-                .onChange(of: seat) {
+                .onChange(of: seat) { _ in
                     seat = String(seat.uppercased().prefix(4))
                 }
         }
@@ -122,7 +122,7 @@ struct BoardingBarcodeView: View {
     private var referenceInfoSection: some View {
         Section("参照情報") {
             LabeledInputField(title: "PNR", text: $bookingRef, example: "ABC123", field: .bookingRef, focusedField: $focusedField)
-                .onChange(of: bookingRef) {
+                .onChange(of: bookingRef) { _ in
                     bookingRef = String(bookingRef.uppercased().prefix(7))
                 }
 
@@ -130,7 +130,7 @@ struct BoardingBarcodeView: View {
             let boardingWithKeyboard = boardingView.keyboardType(.numberPad)
             
             boardingWithKeyboard
-                .onChange(of: boardingIndex) {
+                .onChange(of: boardingIndex) { _ in
                     boardingIndex = String(boardingIndex.prefix(4))
                 }
         }
@@ -168,12 +168,12 @@ struct BoardingBarcodeView: View {
 
             Section("乗客情報") {
                 LabeledInputField(title: "名", text: $firstName, example: "John", field: .firstName, focusedField: $focusedField)
-                    .onChange(of: firstName) {
+                    .onChange(of: firstName) { _ in
                         firstName = firstName.uppercased()
                     }
 
                 LabeledInputField(title: "姓", text: $lastName, example: "Smith", field: .lastName, focusedField: $focusedField)
-                    .onChange(of: lastName) {
+                    .onChange(of: lastName) { _ in
                         lastName = lastName.uppercased()
                     }
             }
@@ -251,10 +251,10 @@ struct BoardingBarcodeView: View {
                 updateBarcodeImage()
             }
         }
-        .onChange(of: rawData) {
+        .onChange(of: rawData) { _ in
             updateBarcodeImage()
         }
-        .onChange(of: codeTypeRaw) {
+        .onChange(of: codeTypeRaw) { _ in
             updateBarcodeImage()
         }
     }
