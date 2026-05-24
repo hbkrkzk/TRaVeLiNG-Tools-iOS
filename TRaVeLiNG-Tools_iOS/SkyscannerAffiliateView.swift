@@ -408,8 +408,8 @@ struct ShareTextSettingsView: View {
 
 class TravelPayoutsAffiliateService {
     private static let baseURL = "https://api.travelpayouts.com/links/v1/create"
-    private static let trs = "532203"
-    private static let marker = "731698"
+    private static let trs = 532203
+    private static let marker = 731698
     
     private static let apiKey: String = {
         if let configPath = Bundle.main.path(forResource: "LocalConfig", ofType: "plist"),
@@ -476,8 +476,8 @@ class TravelPayoutsAffiliateService {
     }
     
     private struct CreateLinksRequest: Codable {
-        let trs: String
-        let marker: String
+        let trs: Int
+        let marker: Int
         let shorten: Bool
         let links: [LinkRequest]
     }
@@ -495,8 +495,8 @@ class TravelPayoutsAffiliateService {
         let status: Int
         
         struct Result: Codable {
-            let trs: String
-            let marker: String
+            let trs: Int
+            let marker: Int
             let shorten: Bool
             let links: [PartnerLink]
         }
