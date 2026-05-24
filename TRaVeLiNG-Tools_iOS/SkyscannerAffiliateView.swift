@@ -308,23 +308,10 @@ struct SkyscannerAffiliateView: View {
         let isRoundTrip = info.returnDate != nil && info.returnDate != info.departureDate
         let rdateValue = isRoundTrip ? formatDateForTrip(info.returnDate ?? info.departureDate) : formatDateForTrip(info.departureDate)
         
-        let params: [String: String] = [
-            "dcity": info.departure,
-            "acity": info.arrival,
-            "ddate": formatDateForTrip(info.departureDate),
-            "rdate": rdateValue,
-            "triptype": isRoundTrip ? "rt" : "ow",
-            "class": "y",
-            "lowpricesource": "searchform",
-            "quantity": "1",
-            "searchboxarg": "t",
-            "nonstoponly": "off",
-            "locale": "ja-JP",
-            "curr": "JPY"
-        ]
+        // URLコンポーネントの順序を重視
+        let urlString = "\(baseURL)?dcity=\(info.departure)&acity=\(info.arrival)&ddate=\(formatDateForTrip(info.departureDate))&rdate=\(rdateValue)&triptype=\(isRoundTrip ? "rt" : "ow")&class=y&lowpricesource=searchform&quantity=1&searchboxarg=t&nonstoponly=off&locale=ja-JP&curr=JPY"
         
-        let queryString = params.map { "\($0.key)=\($0.value)" }.joined(separator: "&")
-        return "\(baseURL)?\(queryString)"
+        return urlString
     }
     
     private func generateTravelokaURL(info: SkyscannerFlightInfo) -> String? {
@@ -335,16 +322,10 @@ struct SkyscannerAffiliateView: View {
         let depDate = formatDateForTraveloka(info.departureDate)
         let retDate = isRoundTrip ? formatDateForTraveloka(info.returnDate ?? info.departureDate) : "NA"
         
-        let params: [String: String] = [
-            "ap": "\(info.departure).\(info.arrival)",
-            "dt": "\(depDate).\(retDate)",
-            "ps": "1.0.0",
-            "sc": "ECONOMY",
-            "funnelSource": "SEO-Default-SearchForm"
-        ]
+        // URLコンポーネントの順序を重視
+        let urlString = "\(baseURL)/\(endpoint)?ap=\(info.departure).\(info.arrival)&dt=\(depDate).\(retDate)&ps=1.0.0&sc=ECONOMY&funnelSource=SEO-Default-SearchForm"
         
-        let queryString = params.map { "\($0.key)=\($0.value)" }.joined(separator: "&")
-        return "\(baseURL)/\(endpoint)?\(queryString)"
+        return urlString
     }
     
     private func formatDateForTrip(_ dateStr: String) -> String {
