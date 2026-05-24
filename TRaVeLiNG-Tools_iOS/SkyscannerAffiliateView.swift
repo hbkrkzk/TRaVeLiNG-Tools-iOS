@@ -518,8 +518,16 @@ struct SkyscannerAffiliateView: View {
     }
     
     private func generatePartnerAffiliateLink(url: String, campaignId: Int) async -> String? {
-        let result = try? await TravelPayoutsAffiliateService.generateAffiliateLink(from: url)
-        return result?.partnerURL
+        guard let result = try? await TravelPayoutsAffiliateService.generateAffiliateLink(from: url) else {
+            return nil
+        }
+        
+        let partnerURL = result.partnerURL
+        // すでに短縮されている（TravelPayouts API経由）か、カスタムリンク（Kiwiなど）を短縮する
+        if partnerURL.contains("c111.travelpayouts.com") || partnerURL.contains("c104.travelpayouts.com") || !partnerURL.contains("xgd.io") {
+            return await shortenURLAsync(partnerURL) ?? partnerURL
+        }
+        return partnerURL
     }
 }
 
