@@ -38,7 +38,7 @@ struct ContentView: View {
                         }
                     } label: {
                         ToolCard(
-                            title: "Skyscanner Link",
+                            title: "Affiliate Link",
                             subtitle: "",
                             systemImage: "link.circle.fill"
                         )
