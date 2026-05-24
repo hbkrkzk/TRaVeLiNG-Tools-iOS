@@ -2,8 +2,11 @@ import SwiftUI
 
 struct SkyscannerAffiliateView: View {
     @State private var skyscannerLink: String = ""
+    @State private var partnerLink: String = ""
     @State private var generatedURL: String?
     @State private var shortenedURL: String?
+    @State private var partnerGeneratedURL: String?
+    @State private var partnerShortenedURL: String?
     @State private var shareText: String?
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
@@ -14,6 +17,8 @@ struct SkyscannerAffiliateView: View {
     @State private var flightInfo: SkyscannerFlightInfo?
     @State private var showCopyFeedback: String?
     @State private var feedbackColor: Color = .green
+    @State private var partnerName: String?
+    @State private var campaignId: Int?
     @StateObject private var historyManager = AffiliateURLHistoryManager.shared
     
     var body: some View {
@@ -26,6 +31,11 @@ struct SkyscannerAffiliateView: View {
                         
                         VStack(spacing: 8) {
                             TextField("Skyscannerリンク", text: $skyscannerLink)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.body)
+                                .frame(height: 44)
+                            
+                            TextField("Traveloka / Trip.com (オプション)", text: $partnerLink)
                                 .textFieldStyle(.roundedBorder)
                                 .font(.body)
                                 .frame(height: 44)
@@ -76,8 +86,12 @@ struct SkyscannerAffiliateView: View {
                             resultBox(title: "シェアテキスト", icon: "quote.bubble.fill", content: text, color: .orange)
                         }
                         
+                        if let shortUrl = partnerShortenedURL, let pName = partnerName {
+                            resultBox(title: "パートナーURL (\(pName))", icon: "link.circle.fill", content: shortUrl, color: .cyan)
+                        }
+                        
                         if let shortUrl = shortenedURL {
-                            resultBox(title: "短縮URL", icon: "link.circle.fill", content: shortUrl, color: .purple)
+                            resultBox(title: "短縮URL (Skyscanner)", icon: "link.circle.fill", content: shortUrl, color: .purple)
                         }
                         
                         if let url = generatedURL {
@@ -89,7 +103,7 @@ struct SkyscannerAffiliateView: View {
                 }
                 .padding(12)
             }
-            .navigationTitle("Skyscanner Link")
+            .navigationTitle("Affiliate Link")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
@@ -182,9 +196,11 @@ struct SkyscannerAffiliateView: View {
     }
     
     private func generateURL() {
-        let trimmedLink = skyscannerLink.trimmingCharacters(in: .whitespaces)
-        guard !trimmedLink.isEmpty else {
-            errorMessage = "URLを入力してください"
+        let trimmedSkyscannerLink = skyscannerLink.trimmingCharacters(in: .whitespaces)
+        let trimmedPartnerLink = partnerLink.trimmingCharacters(in: .whitespaces)
+        
+        guard !trimmedSkyscannerLink.isEmpty else {
+            errorMessage = "Skyscanner URLを入力してください"
             showError = true
             return
         }
@@ -196,7 +212,7 @@ struct SkyscannerAffiliateView: View {
         Task {
             do {
                 // URL解析
-                guard let info = await parseSkyscannerLinkAsync(trimmedLink) else {
+                guard let info = await parseSkyscannerLinkAsync(trimmedSkyscannerLink) else {
                     await MainActor.run {
                         self.errorMessage = "URLを解析できませんでした"
                         self.showError = true
@@ -205,12 +221,32 @@ struct SkyscannerAffiliateView: View {
                     return
                 }
                 
-                // Impact.com API でアフィリエイトURL生成
-                let affiliateUrl = try await SkyscannerURLService.generateAffiliateURLDirectAsync(trimmedLink)
+                // Impact.com API でSkyscannerアフィリエイトURL生成
+                let affiliateUrl = try await SkyscannerURLService.generateAffiliateURLDirectAsync(trimmedSkyscannerLink)
                 
-                let template = info.isRoundTrip
-                    ? ShareTextService.shared.getRoundTripTemplate()
-                    : ShareTextService.shared.getOnewayTemplate()
+                // パートナーリンクの処理
+                var finalPartnerName: String? = nil
+                var finalCampaignId: Int? = nil
+                var finalPartnerAffiliateUrl: String? = nil
+                var finalPartnerShortenedUrl: String? = nil
+                
+                if !trimmedPartnerLink.isEmpty {
+                    do {
+                        let (partnerAffiliateUrl, campaignId) = try await TravelPayoutsAffiliateService.generateAffiliateLink(from: trimmedPartnerLink)
+                        finalPartnerName = TravelPayoutsAffiliateService.getPartnerName(campaignId: campaignId)
+                        finalCampaignId = campaignId
+                        finalPartnerAffiliateUrl = partnerAffiliateUrl
+                        
+                        // パートナーURLを短縮
+                        if let shortened = await shortenURLAsync(partnerAffiliateUrl) {
+                            finalPartnerShortenedUrl = shortened
+                        } else {
+                            finalPartnerShortenedUrl = partnerAffiliateUrl
+                        }
+                    } catch {
+                        print("⚠️ パートナーリンク生成エラー: \(error.localizedDescription)")
+                    }
+                }
                 
                 // 短縮URL取得
                 let shortUrl = await shortenURLAsync(affiliateUrl)
@@ -218,10 +254,28 @@ struct SkyscannerAffiliateView: View {
                 await MainActor.run {
                     self.flightInfo = info
                     self.generatedURL = affiliateUrl
+                    self.partnerGeneratedURL = finalPartnerAffiliateUrl
                     
                     let finalUrl = shortUrl ?? affiliateUrl
                     self.shortenedURL = finalUrl
-                    self.shareText = template.replacingOccurrences(of: "{URL}", with: finalUrl)
+                    self.partnerShortenedURL = finalPartnerShortenedUrl
+                    self.partnerName = finalPartnerName
+                    self.campaignId = finalCampaignId
+                    
+                    // シェアテキスト生成
+                    if let partnerName = finalPartnerName, let partnerShortUrl = finalPartnerShortenedUrl {
+                        self.shareText = ShareTextService.shared.generateShareTextWithPartner(
+                            isRoundTrip: info.isRoundTrip,
+                            partnerName: partnerName,
+                            partnerURL: partnerShortUrl,
+                            skycannerURL: finalUrl
+                        )
+                    } else {
+                        let template = info.isRoundTrip
+                            ? ShareTextService.shared.getRoundTripTemplate()
+                            : ShareTextService.shared.getOnewayTemplate()
+                        self.shareText = template.replacingOccurrences(of: "{URL}", with: finalUrl)
+                    }
                     
                     // 履歴に保存
                     self.historyManager.addRecord(
@@ -231,7 +285,9 @@ struct SkyscannerAffiliateView: View {
                         returnDate: info.returnDate,
                         shortenedURL: finalUrl,
                         affiliateURL: affiliateUrl,
-                        isRoundTrip: info.isRoundTrip
+                        isRoundTrip: info.isRoundTrip,
+                        partnerName: finalPartnerName,
+                        campaignId: finalCampaignId
                     )
                     
                     self.isLoading = false
@@ -272,7 +328,12 @@ struct SkyscannerAffiliateView: View {
     
     private func pasteFromClipboard() {
         if let clipboard = UIPasteboard.general.string {
-            skyscannerLink = clipboard
+            // パートナーリンクかSkyscannerリンクかを自動判定
+            if TravelPayoutsAffiliateService.getCampaignId(from: clipboard) != nil {
+                partnerLink = clipboard
+            } else {
+                skyscannerLink = clipboard
+            }
         }
     }
     
@@ -355,8 +416,10 @@ struct AffiliateURLRecord: Identifiable, Codable {
     let shortenedURL: String
     let affiliateURL: String
     let isRoundTrip: Bool
+    let partnerName: String?
+    let campaignId: Int?
     
-    init(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool) {
+    init(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool, partnerName: String? = nil, campaignId: Int? = nil) {
         self.id = UUID().uuidString
         self.createdDate = Date()
         self.departureCode = departureCode
@@ -366,6 +429,8 @@ struct AffiliateURLRecord: Identifiable, Codable {
         self.shortenedURL = shortenedURL
         self.affiliateURL = affiliateURL
         self.isRoundTrip = isRoundTrip
+        self.partnerName = partnerName
+        self.campaignId = campaignId
     }
     
     var statsURL: String { shortenedURL + "+" }
@@ -404,8 +469,8 @@ class AffiliateURLHistoryManager: ObservableObject {
     
     init() { loadRecords() }
     
-    func addRecord(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool) {
-        let record = AffiliateURLRecord(departureCode: departureCode, arrivalCode: arrivalCode, outboundDate: outboundDate, returnDate: returnDate, shortenedURL: shortenedURL, affiliateURL: affiliateURL, isRoundTrip: isRoundTrip)
+    func addRecord(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool, partnerName: String? = nil, campaignId: Int? = nil) {
+        let record = AffiliateURLRecord(departureCode: departureCode, arrivalCode: arrivalCode, outboundDate: outboundDate, returnDate: returnDate, shortenedURL: shortenedURL, affiliateURL: affiliateURL, isRoundTrip: isRoundTrip, partnerName: partnerName, campaignId: campaignId)
         records.insert(record, at: 0)
         saveRecords()
     }
@@ -607,4 +672,218 @@ extension View {
 
 #Preview {
     SkyscannerAffiliateView()
+}
+
+// MARK: - TravelPayouts Affiliate Service
+
+class TravelPayoutsAffiliateService {
+    private static let baseURL = "https://api.travelpayouts.com/links/v1/create"
+    private static let trs = "532203"
+    private static let marker = "731698"
+    
+    private static let apiKey: String = {
+        if let configPath = Bundle.main.path(forResource: "LocalConfig", ofType: "plist"),
+           let config = NSDictionary(contentsOfFile: configPath) as? [String: Any],
+           let key = config["TRAVELPAYOUTS_API_KEY"] as? String,
+           !key.isEmpty {
+            return key
+        }
+        
+        if let key = Bundle.main.infoDictionary?["TRAVELPAYOUTS_API_KEY"] as? String,
+           !key.isEmpty {
+            return key
+        }
+        
+        return ""
+    }()
+    
+    private static let session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 60
+        return URLSession(configuration: config)
+    }()
+    
+    enum TravelPayoutsError: LocalizedError {
+        case invalidURL
+        case networkError(Error)
+        case invalidResponse
+        case decodingError(Error)
+        case apiError(String)
+        case noPartnerURL
+        case missingAPIKey
+        case invalidPartner
+        
+        var errorDescription: String? {
+            switch self {
+            case .invalidURL:
+                return "無効なURLです"
+            case .networkError(let error):
+                return "ネットワークエラー: \(error.localizedDescription)"
+            case .invalidResponse:
+                return "無効なAPIレスポンスです"
+            case .decodingError(let error):
+                return "レスポンス解析エラー: \(error.localizedDescription)"
+            case .apiError(let message):
+                return "APIエラー: \(message)"
+            case .noPartnerURL:
+                return "パートナーURLが返されませんでした"
+            case .missingAPIKey:
+                return "TravelPayouts API Keyが設定されていません"
+            case .invalidPartner:
+                return "無効なパートナーです"
+            }
+        }
+    }
+    
+    private struct LinkRequest: Codable {
+        let url: String
+        let sub_id: String?
+        
+        enum CodingKeys: String, CodingKey {
+            case url, sub_id
+        }
+    }
+    
+    private struct CreateLinksRequest: Codable {
+        let trs: String
+        let marker: String
+        let shorten: Bool
+        let links: [LinkRequest]
+    }
+    
+    private struct PartnerLink: Codable {
+        let url: String
+        let code: String
+        let partner_url: String?
+        let campaign_id: Int?
+    }
+    
+    private struct CreateLinksResponse: Codable {
+        let result: Result?
+        let code: String
+        let status: Int
+        
+        struct Result: Codable {
+            let trs: String
+            let marker: String
+            let shorten: Bool
+            let links: [PartnerLink]
+        }
+    }
+    
+    static func getPartnerName(campaignId: Int) -> String {
+        switch campaignId {
+        case 632:
+            return "Traveloka"
+        case 121:
+            return "Trip.com"
+        default:
+            return "パートナー"
+        }
+    }
+    
+    static func getCampaignId(from url: String) -> Int? {
+        let travelokaPatterns = [
+            "traveloka.com",
+            "traveloka.co.jp"
+        ]
+        let tripcomPatterns = [
+            "trip.com",
+            "tripadvisor.com"
+        ]
+        
+        if travelokaPatterns.contains(where: { url.lowercased().contains($0) }) {
+            return 632
+        } else if tripcomPatterns.contains(where: { url.lowercased().contains($0) }) {
+            return 121
+        }
+        return nil
+    }
+    
+    static func generateAffiliateLink(from url: String) async throws -> (partnerURL: String, campaignId: Int) {
+        guard !url.isEmpty else {
+            throw TravelPayoutsError.invalidURL
+        }
+        
+        guard !apiKey.isEmpty else {
+            throw TravelPayoutsError.missingAPIKey
+        }
+        
+        guard let campaignId = getCampaignId(from: url) else {
+            throw TravelPayoutsError.invalidPartner
+        }
+        
+        guard let requestURL = URL(string: baseURL) else {
+            throw TravelPayoutsError.invalidURL
+        }
+        
+        let linkRequest = LinkRequest(url: url, sub_id: nil)
+        let createRequest = CreateLinksRequest(
+            trs: trs,
+            marker: marker,
+            shorten: true,
+            links: [linkRequest]
+        )
+        
+        let encoder = JSONEncoder()
+        guard let requestBody = try? encoder.encode(createRequest) else {
+            throw TravelPayoutsError.invalidURL
+        }
+        
+        var httpRequest = URLRequest(url: requestURL)
+        httpRequest.httpMethod = "POST"
+        httpRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        httpRequest.setValue(apiKey, forHTTPHeaderField: "X-Access-Token")
+        httpRequest.httpBody = requestBody
+        
+        do {
+            let (data, response) = try await session.data(for: httpRequest)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw TravelPayoutsError.invalidResponse
+            }
+            
+            guard (200...299).contains(httpResponse.statusCode) else {
+                let errorMessage = parseErrorResponse(data)
+                throw TravelPayoutsError.apiError("HTTPステータス: \(httpResponse.statusCode) - \(errorMessage)")
+            }
+            
+            let decoder = JSONDecoder()
+            let apiResponse = try decoder.decode(CreateLinksResponse.self, from: data)
+            
+            guard let result = apiResponse.result,
+                  let firstLink = result.links.first,
+                  let partnerURL = firstLink.partner_url,
+                  !partnerURL.isEmpty else {
+                throw TravelPayoutsError.noPartnerURL
+            }
+            
+            return (partnerURL: partnerURL, campaignId: campaignId)
+        } catch let error as TravelPayoutsError {
+            throw error
+        } catch let error as DecodingError {
+            throw TravelPayoutsError.decodingError(error)
+        } catch {
+            throw TravelPayoutsError.networkError(error)
+        }
+    }
+    
+    private static func parseErrorResponse(_ data: Data) -> String {
+        do {
+            if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                if let message = json["message"] as? String {
+                    return message
+                }
+                if let errors = json["errors"] as? [String: Any] {
+                    return String(describing: errors)
+                }
+            }
+        } catch {
+            if let errorString = String(data: data, encoding: .utf8) {
+                return errorString
+            }
+        }
+        return "不明なエラー"
+    }
 }

@@ -21,11 +21,6 @@ class ShareTextService {
 ✈️スカイスキャナーで検索
 往復: {URL}
 
-📲楽天モバイル
-🌏海外データ2GB/月
-▽乗換で1.4万ptゲット
-https://x.gd/6LqKk
-
 💳️セゾンプラチナビジネス
 ✅PP無料付帯
 ▽特別招待ー初年度無料＆アマギフ1.2万
@@ -35,11 +30,6 @@ https://x.gd/TYSba
     private let defaultOnewayTemplate = """
 ✈️スカイスキャナーで検索
 片道: {URL}
-
-📲楽天モバイル
-🌏海外データ2GB/月
-▽乗換で1.4万ptゲット
-https://x.gd/6LqKk
 
 💳️セゾンプラチナビジネス
 ✅PP無料付帯
@@ -91,6 +81,33 @@ https://x.gd/TYSba
         let template = isRoundTrip ? getRoundTripTemplate() : getOnewayTemplate()
         let shareText = template.replacingOccurrences(of: "{URL}", with: shortenedURL)
         print("📝 Generated share text:\n\(shareText)")
+        return shareText
+    }
+    
+    /// パートナーアフィリエイト対応のシェアテキスト生成
+    func generateShareTextWithPartner(
+        isRoundTrip: Bool,
+        partnerName: String,
+        partnerURL: String,
+        skycannerURL: String
+    ) -> String {
+        let template = isRoundTrip ? getRoundTripTemplate() : getOnewayTemplate()
+        
+        // パートナーリンク部分
+        let partnerLine = """
+✈️直接\(partnerName)で予約
+\(partnerURL)
+
+"""
+        
+        // スカイスキャナー部分を置き換え
+        let replaceKey = "✈️スカイスキャナーで検索\n\(isRoundTrip ? "往復" : "片道"): {URL}"
+        let skycannerLine = "✈️スカイスキャナーで検索\n\(isRoundTrip ? "往復" : "片道"): \(skycannerURL)"
+        
+        var shareText = template
+        shareText = shareText.replacingOccurrences(of: replaceKey, with: partnerLine + skycannerLine)
+        
+        print("📝 Generated partner share text:\n\(shareText)")
         return shareText
     }
     

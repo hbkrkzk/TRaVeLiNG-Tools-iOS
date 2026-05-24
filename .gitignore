@@ -31,3 +31,8 @@ scripts
 # Sensitive Configuration
 Config.xcconfig
 ImpactConfig.plist
+
+# API Keys and Local Config (do not commit)
+Config.plist
+LocalConfig.plist
+.env

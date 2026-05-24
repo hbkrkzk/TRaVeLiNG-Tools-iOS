@@ -11,8 +11,10 @@ struct AffiliateURLRecord: Identifiable, Codable {
     let shortenedURL: String
     let affiliateURL: String
     let isRoundTrip: Bool
+    let partnerName: String?
+    let campaignId: Int?
     
-    init(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool) {
+    init(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool, partnerName: String? = nil, campaignId: Int? = nil) {
         self.id = UUID().uuidString
         self.createdDate = Date()
         self.departureCode = departureCode
@@ -22,6 +24,8 @@ struct AffiliateURLRecord: Identifiable, Codable {
         self.shortenedURL = shortenedURL
         self.affiliateURL = affiliateURL
         self.isRoundTrip = isRoundTrip
+        self.partnerName = partnerName
+        self.campaignId = campaignId
     }
     
     var statsURL: String { shortenedURL + "+" }
@@ -60,8 +64,8 @@ class AffiliateURLHistoryManager: ObservableObject {
     
     init() { loadRecords() }
     
-    func addRecord(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool) {
-        let record = AffiliateURLRecord(departureCode: departureCode, arrivalCode: arrivalCode, outboundDate: outboundDate, returnDate: returnDate, shortenedURL: shortenedURL, affiliateURL: affiliateURL, isRoundTrip: isRoundTrip)
+    func addRecord(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool, partnerName: String? = nil, campaignId: Int? = nil) {
+        let record = AffiliateURLRecord(departureCode: departureCode, arrivalCode: arrivalCode, outboundDate: outboundDate, returnDate: returnDate, shortenedURL: shortenedURL, affiliateURL: affiliateURL, isRoundTrip: isRoundTrip, partnerName: partnerName, campaignId: campaignId)
         records.insert(record, at: 0)
         saveRecords()
     }
@@ -155,17 +159,32 @@ struct AffiliateHistoryListView: View {
                                 HStack(spacing: 8) {
                                     Text(record.shortenedURL).font(.caption).lineLimit(1).truncationMode(.middle).foregroundStyle(.blue)
                                     Spacer()
-                                    Button(action: { 
-                                        UIPasteboard.general.string = record.statsURL
-                                        showCopyFeedback = "コピーしました"
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                            showCopyFeedback = nil
+                                    if let partnerName = record.partnerName, let campaignId = record.campaignId {
+                                        Button(action: { 
+                                            UIPasteboard.general.string = record.shortenedURL
+                                            showCopyFeedback = "コピーしました"
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                                showCopyFeedback = nil
+                                            }
+                                        }) {
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "doc.on.doc")
+                                                Text("他(\(campaignId))")
+                                            }.font(.caption2.weight(.semibold)).padding(.horizontal, 8).frame(height: 28).background(Color.orange.opacity(0.1)).foregroundStyle(.orange).cornerRadius(4)
                                         }
-                                    }) {
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "doc.on.doc")
-                                            Text("統計用")
-                                        }.font(.caption2.weight(.semibold)).padding(.horizontal, 8).frame(height: 28).background(Color.purple.opacity(0.1)).foregroundStyle(.purple).cornerRadius(4)
+                                    } else {
+                                        Button(action: { 
+                                            UIPasteboard.general.string = record.statsURL
+                                            showCopyFeedback = "コピーしました"
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                                showCopyFeedback = nil
+                                            }
+                                        }) {
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "doc.on.doc")
+                                                Text("統計用")
+                                            }.font(.caption2.weight(.semibold)).padding(.horizontal, 8).frame(height: 28).background(Color.purple.opacity(0.1)).foregroundStyle(.purple).cornerRadius(4)
+                                        }
                                     }
                                     Button(action: { recordToDelete = record; showDeleteConfirm = true }) {
                                         Image(systemName: "xmark.circle.fill").font(.caption).foregroundStyle(.red)
