@@ -383,9 +383,15 @@ struct SkyscannerAffiliateView: View {
         let isRoundTrip = info.isRoundTrip
         let rdateValue = isRoundTrip ? formatDateForTrip(info.returnDate ?? info.departureDate) : formatDateForTrip(info.departureDate)
         
-        // 常に3レターに変換 (TYOA -> TYO)
-        let departure = String(info.departure.prefix(3)).lowercased()
-        let arrival = String(info.arrival.prefix(3)).lowercased()
+        // 空港コードの処理
+        func formatCode(_ code: String) -> String {
+            let upper = code.uppercased()
+            if upper == "CSHA" { return "sha" } // CSHAはSHAに変換
+            return String(upper.prefix(3)).lowercased() // 常に3レターに変換
+        }
+        
+        let departure = formatCode(info.departure)
+        let arrival = formatCode(info.arrival)
         
         // URLコンポーネントの順序を重視
         let urlString = "\(baseURL)?dcity=\(departure)&acity=\(arrival)&ddate=\(formatDateForTrip(info.departureDate))&rdate=\(rdateValue)&triptype=\(isRoundTrip ? "rt" : "ow")&class=y&lowpricesource=searchform&quantity=1&searchboxarg=t&nonstoponly=off&locale=ja-JP&curr=JPY"
@@ -398,11 +404,26 @@ struct SkyscannerAffiliateView: View {
         let baseURL = "https://www.traveloka.com/ja-jp/flight"
         let endpoint = isRoundTrip ? "fulltwosearch" : "fullsearch"
         
+        // 特殊な変換マッピング
+        let customMapping: [String: String] = [
+            "TPET": "TAIA",
+            "BJSA": "BEIA",
+            "TYOA": "TYOA",
+            "CSHA": "SHAA",
+            "BKKT": "BKKA",
+            "NYCA": "NEWA",
+            "SELA": "SEOA"
+        ]
+        
         // 空港コードの処理
         func formatCode(_ code: String) -> String {
             let upper = code.uppercased()
-            // BJSAはPEKに変換
-            if upper == "BJSA" { return "PEK" }
+            
+            // カスタムマッピングがある場合は適用
+            if let mapped = customMapping[upper] {
+                return mapped
+            }
+            
             // 4レターで末尾がAならそのまま、それ以外で4レターなら3レターに
             if upper.count == 4 && !upper.hasSuffix("A") {
                 return String(upper.prefix(3))
@@ -423,9 +444,15 @@ struct SkyscannerAffiliateView: View {
     }
 
     private func generateKiwiURL(info: SkyscannerFlightInfo) -> String? {
-        // 常に3レターに変換 (TYOA -> TYO)
-        let departure = String(info.departure.prefix(3)).uppercased()
-        let arrival = String(info.arrival.prefix(3)).uppercased()
+        // 空港コードの処理
+        func formatCode(_ code: String) -> String {
+            let upper = code.uppercased()
+            if upper == "CSHA" { return "SHA" } // CSHAはSHAに変換
+            return String(upper.prefix(3)) // 常に3レターに変換
+        }
+        
+        let departure = formatCode(info.departure)
+        let arrival = formatCode(info.arrival)
         let departDate = info.departureDate // yyyy-mm-dd
         
         var urlString = "https://www.kiwi.com/deep?from=\(departure)&to=\(arrival)&departure=\(departDate)"
