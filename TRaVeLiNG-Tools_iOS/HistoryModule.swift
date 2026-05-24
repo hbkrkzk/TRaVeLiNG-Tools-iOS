@@ -17,6 +17,7 @@ struct AffiliateURLRecord: Identifiable, Codable {
     let campaignId: Int?
     let tripShortUrl: String?
     let travelokaShortUrl: String?
+    let kiwiShortUrl: String?
     let shareText: String?
     
     init(
@@ -33,6 +34,7 @@ struct AffiliateURLRecord: Identifiable, Codable {
         campaignId: Int? = nil,
         tripShortUrl: String? = nil,
         travelokaShortUrl: String? = nil,
+        kiwiShortUrl: String? = nil,
         shareText: String? = nil
     ) {
         self.id = id
@@ -48,6 +50,7 @@ struct AffiliateURLRecord: Identifiable, Codable {
         self.campaignId = campaignId
         self.tripShortUrl = tripShortUrl
         self.travelokaShortUrl = travelokaShortUrl
+        self.kiwiShortUrl = kiwiShortUrl
         self.shareText = shareText
     }
     
@@ -95,6 +98,7 @@ struct AffiliateURLRecord: Identifiable, Codable {
             "campaignId": campaignId as Any,
             "tripShortUrl": tripShortUrl as Any,
             "travelokaShortUrl": travelokaShortUrl as Any,
+            "kiwiShortUrl": kiwiShortUrl as Any,
             "shareText": shareText as Any
         ]
     }
@@ -125,6 +129,7 @@ struct AffiliateURLRecord: Identifiable, Codable {
         self.campaignId = dictionary["campaignId"] as? Int
         self.tripShortUrl = dictionary["tripShortUrl"] as? String
         self.travelokaShortUrl = dictionary["travelokaShortUrl"] as? String
+        self.kiwiShortUrl = dictionary["kiwiShortUrl"] as? String
         self.shareText = dictionary["shareText"] as? String
     }
 }
@@ -166,8 +171,8 @@ class AffiliateURLHistoryManager: ObservableObject {
             }
     }
     
-    func addRecord(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool, partnerName: String? = nil, campaignId: Int? = nil, tripShortUrl: String? = nil, travelokaShortUrl: String? = nil, shareText: String? = nil) {
-        let record = AffiliateURLRecord(departureCode: departureCode, arrivalCode: arrivalCode, outboundDate: outboundDate, returnDate: returnDate, shortenedURL: shortenedURL, affiliateURL: affiliateURL, isRoundTrip: isRoundTrip, partnerName: partnerName, campaignId: campaignId, tripShortUrl: tripShortUrl, travelokaShortUrl: travelokaShortUrl, shareText: shareText)
+    func addRecord(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool, partnerName: String? = nil, campaignId: Int? = nil, tripShortUrl: String? = nil, travelokaShortUrl: String? = nil, kiwiShortUrl: String? = nil, shareText: String? = nil) {
+        let record = AffiliateURLRecord(departureCode: departureCode, arrivalCode: arrivalCode, outboundDate: outboundDate, returnDate: returnDate, shortenedURL: shortenedURL, affiliateURL: affiliateURL, isRoundTrip: isRoundTrip, partnerName: partnerName, campaignId: campaignId, tripShortUrl: tripShortUrl, travelokaShortUrl: travelokaShortUrl, kiwiShortUrl: kiwiShortUrl, shareText: shareText)
         
         // Firestoreに保存（オフライン時は自動でキューイングされる）
         db.collection("history").document(record.id).setData(record.dictionary) { error in
@@ -319,6 +324,13 @@ struct AffiliateHistoryListView: View {
                                             actionButton(label: "Traveloka", color: .cyan) {
                                                 UIPasteboard.general.string = travelokaUrl
                                                 showCopyFeedback = "Travelokaリンクをコピーしました"
+                                            }
+                                        }
+                                        
+                                        if let kiwiUrl = record.kiwiShortUrl {
+                                            actionButton(label: "Kiwi com", color: .green) {
+                                                UIPasteboard.general.string = kiwiUrl
+                                                showCopyFeedback = "Kiwi comリンクをコピーしました"
                                             }
                                         }
                                         

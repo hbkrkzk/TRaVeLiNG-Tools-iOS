@@ -4,10 +4,12 @@ struct SkyscannerAffiliateView: View {
     @State private var skyscannerLink: String = ""
     @State private var tripComEnabled: Bool = false
     @State private var travelokaEnabled: Bool = false
+    @State private var kiwiComEnabled: Bool = false
     @State private var generatedURL: String?
     @State private var shortenedURL: String?
     @State private var tripShortenedURL: String?
     @State private var travelokaShortenedURL: String?
+    @State private var kiwiShortenedURL: String?
     @State private var shareText: String?
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
@@ -76,10 +78,11 @@ struct SkyscannerAffiliateView: View {
                             Button(action: {
                                 tripComEnabled = true
                                 travelokaEnabled = true
+                                kiwiComEnabled = true
                             }) {
                                 HStack {
                                     Image(systemName: "plus.circle.fill")
-                                    Text("Trip.com & Travelokaを一括選択")
+                                    Text("全パートナーを一括選択")
                                 }
                                 .font(.subheadline.weight(.semibold))
                                 .frame(maxWidth: .infinity)
@@ -93,7 +96,7 @@ struct SkyscannerAffiliateView: View {
                             Toggle(isOn: $tripComEnabled) {
                                 HStack(spacing: 8) {
                                     Image(systemName: "checkmark.circle.fill")
-                                    Text("Trip.com")
+                                    Text("Trip com")
                                         .fontWeight(.semibold)
                                 }
                             }
@@ -102,6 +105,14 @@ struct SkyscannerAffiliateView: View {
                                 HStack(spacing: 8) {
                                     Image(systemName: "checkmark.circle.fill")
                                     Text("Traveloka")
+                                        .fontWeight(.semibold)
+                                }
+                            }
+
+                            Toggle(isOn: $kiwiComEnabled) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                    Text("Kiwi com")
                                         .fontWeight(.semibold)
                                 }
                             }
@@ -142,6 +153,10 @@ struct SkyscannerAffiliateView: View {
                         
                         if let shortUrl = travelokaShortenedURL {
                             resultBox(title: "短縮URL (Traveloka)", icon: "link.circle.fill", content: shortUrl, color: .blue)
+                        }
+                        
+                        if let shortUrl = kiwiShortenedURL {
+                            resultBox(title: "短縮URL (Kiwi com)", icon: "link.circle.fill", content: shortUrl, color: .green)
                         }
                         
                         if let shortUrl = tripShortenedURL {
@@ -296,11 +311,18 @@ struct SkyscannerAffiliateView: View {
                     }
                 }
                 
+                if kiwiComEnabled {
+                    if let kiwiUrl = generateKiwiURL(info: info) {
+                        kiwiShortUrl = await generatePartnerAffiliateLink(url: kiwiUrl, campaignId: 3791)
+                    }
+                }
+                
                 // シェアテキスト生成
                 let shareText = generateShareText(
                     isRoundTrip: info.isRoundTrip,
                     tripShortUrl: tripShortUrl,
                     travelokaShortUrl: travelokaShortUrl,
+                    kiwiShortUrl: kiwiShortUrl,
                     skyscannerShortUrl: shortUrl
                 )
                 
@@ -310,6 +332,7 @@ struct SkyscannerAffiliateView: View {
                     self.shortenedURL = shortUrl
                     self.tripShortenedURL = tripShortUrl
                     self.travelokaShortenedURL = travelokaShortUrl
+                    self.kiwiShortenedURL = kiwiShortUrl
                     self.shareText = shareText
                     self.isLoading = false
                     
@@ -321,7 +344,11 @@ struct SkyscannerAffiliateView: View {
                         returnDate: info.returnDate,
                         shortenedURL: shortUrl,
                         affiliateURL: affiliateUrl,
-                        isRoundTrip: info.isRoundTrip
+                        isRoundTrip: info.isRoundTrip,
+                        tripShortUrl: tripShortUrl,
+                        travelokaShortUrl: travelokaShortUrl,
+                        kiwiShortUrl: kiwiShortUrl,
+                        shareText: shareText
                     )
                 }
             } catch {
@@ -359,6 +386,20 @@ struct SkyscannerAffiliateView: View {
         
         // URLコンポーネントの順序を重視
         let urlString = "\(baseURL)/\(endpoint)?ap=\(departure).\(arrival)&dt=\(depDate).\(retDate)&ps=1.0.0&sc=ECONOMY&funnelSource=SEO-Default-SearchForm"
+        
+        return urlString
+    }
+
+    private func generateKiwiURL(info: SkyscannerFlightInfo) -> String? {
+        let departure = info.departure.uppercased()
+        let arrival = info.arrival.uppercased()
+        let departDate = info.departureDate // yyyy-mm-dd
+        
+        var urlString = "https://www.kiwi.com/deep?from=\(departure)&to=\(arrival)&departure=\(departDate)"
+        
+        if info.isRoundTrip, let returnDate = info.returnDate {
+            urlString += "&return=\(returnDate)"
+        }
         
         return urlString
     }
@@ -406,6 +447,7 @@ struct SkyscannerAffiliateView: View {
         isRoundTrip: Bool,
         tripShortUrl: String?,
         travelokaShortUrl: String?,
+        kiwiShortUrl: String?,
         skyscannerShortUrl: String
     ) -> String {
         var text = ""
@@ -418,13 +460,17 @@ struct SkyscannerAffiliateView: View {
         if let travelokaUrl = travelokaShortUrl {
             text += "✈️Travelokaで予約\n\(travelokaUrl)\n\n"
         }
+
+        if let kiwiUrl = kiwiShortUrl {
+            text += "✈️Kiwi comで予約\n\(kiwiUrl)\n\n"
+        }
         
         // Skyscanner
         let tripTypeLabel = isRoundTrip ? "往復" : "片道"
         text += "🔍️スカイスキャナーで検索\n\(tripTypeLabel): \(skyscannerShortUrl)\n\n"
         
         // パートナー選択がない場合のみ楽天モバイルを表示
-        if tripShortUrl == nil && travelokaShortUrl == nil {
+        if tripShortUrl == nil && travelokaShortUrl == nil && kiwiShortUrl == nil {
             text += "📲楽天モバイル\n"
             text += "🌏海外データ2GB/月\n"
             text += "▽乗換で1.4万、新規で1.1万ptゲット\n"
@@ -654,6 +700,8 @@ class TravelPayoutsAffiliateService {
             return 632
         } else if tripcomPatterns.contains(where: { url.lowercased().contains($0) }) {
             return 121
+        } else if url.lowercased().contains("kiwi.com") {
+            return 3791
         }
         return nil
     }
@@ -669,6 +717,13 @@ class TravelPayoutsAffiliateService {
         
         guard let campaignId = getCampaignId(from: url) else {
             throw TravelPayoutsError.invalidPartner
+        }
+        
+        // Kiwi.com の場合は提供されたカスタムリンク形式を使用
+        if campaignId == 3791 {
+            let encodedUrl = url.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? url
+            let partnerURL = "https://c111.travelpayouts.com/click?shmarker=\(marker)&promo_id=3791&source_type=customlink&type=click&custom_url=\(encodedUrl)"
+            return (partnerURL: partnerURL, campaignId: campaignId)
         }
         
         guard let requestURL = URL(string: baseURL) else {
