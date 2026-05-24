@@ -357,12 +357,14 @@ struct SkyscannerAffiliateView: View {
     }
     
     private func formatDateForTraveloka(_ dateStr: String) -> String {
-        // Input: yyyymmdd, Output: dd-m-yyyy
+        // Input: yyyymmdd, Output: dd-m-yyyy (month without leading zero)
         guard dateStr.count >= 8 else { return dateStr }
         let year = dateStr.prefix(4)
         let month = dateStr.dropFirst(4).prefix(2)
         let day = dateStr.dropFirst(6).prefix(2)
-        return "\(day)-\(month)-\(year)"
+        // Remove leading zero from month if present
+        let monthInt = Int(month) ?? 0
+        return "\(day)-\(monthInt)-\(year)"
     }
     
     private func generatePartnerAffiliateLink(url: String, campaignId: Int) async -> String? {
