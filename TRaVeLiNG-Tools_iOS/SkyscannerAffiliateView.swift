@@ -412,7 +412,7 @@ struct SkyscannerAffiliateView: View {
         
         // パートナーリンクを追加
         if let tripUrl = tripShortUrl {
-            text += "✈️Trip.comで予約\n\(tripUrl)\n\n"
+            text += "✈️Trip comで予約\n\(tripUrl)\n\n"
         }
         
         if let travelokaUrl = travelokaShortUrl {
@@ -634,7 +634,7 @@ class TravelPayoutsAffiliateService {
         case 632:
             return "Traveloka"
         case 121:
-            return "Trip.com"
+            return "Trip com"
         default:
             return "パートナー"
         }
