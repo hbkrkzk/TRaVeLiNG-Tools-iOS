@@ -15,8 +15,26 @@ struct AffiliateURLRecord: Identifiable, Codable {
     let isRoundTrip: Bool
     let partnerName: String?
     let campaignId: Int?
+    let tripShortUrl: String?
+    let travelokaShortUrl: String?
+    let shareText: String?
     
-    init(id: String = UUID().uuidString, createdDate: Date = Date(), departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool, partnerName: String? = nil, campaignId: Int? = nil) {
+    init(
+        id: String = UUID().uuidString,
+        createdDate: Date = Date(),
+        departureCode: String,
+        arrivalCode: String,
+        outboundDate: String,
+        returnDate: String?,
+        shortenedURL: String,
+        affiliateURL: String,
+        isRoundTrip: Bool,
+        partnerName: String? = nil,
+        campaignId: Int? = nil,
+        tripShortUrl: String? = nil,
+        travelokaShortUrl: String? = nil,
+        shareText: String? = nil
+    ) {
         self.id = id
         self.createdDate = createdDate
         self.departureCode = departureCode
@@ -28,6 +46,9 @@ struct AffiliateURLRecord: Identifiable, Codable {
         self.isRoundTrip = isRoundTrip
         self.partnerName = partnerName
         self.campaignId = campaignId
+        self.tripShortUrl = tripShortUrl
+        self.travelokaShortUrl = travelokaShortUrl
+        self.shareText = shareText
     }
     
     var statsURL: String { shortenedURL + "+" }
@@ -71,7 +92,10 @@ struct AffiliateURLRecord: Identifiable, Codable {
             "affiliateURL": affiliateURL,
             "isRoundTrip": isRoundTrip,
             "partnerName": partnerName as Any,
-            "campaignId": campaignId as Any
+            "campaignId": campaignId as Any,
+            "tripShortUrl": tripShortUrl as Any,
+            "travelokaShortUrl": travelokaShortUrl as Any,
+            "shareText": shareText as Any
         ]
     }
     
@@ -99,6 +123,9 @@ struct AffiliateURLRecord: Identifiable, Codable {
         self.isRoundTrip = isRoundTrip
         self.partnerName = dictionary["partnerName"] as? String
         self.campaignId = dictionary["campaignId"] as? Int
+        self.tripShortUrl = dictionary["tripShortUrl"] as? String
+        self.travelokaShortUrl = dictionary["travelokaShortUrl"] as? String
+        self.shareText = dictionary["shareText"] as? String
     }
 }
 
@@ -139,8 +166,8 @@ class AffiliateURLHistoryManager: ObservableObject {
             }
     }
     
-    func addRecord(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool, partnerName: String? = nil, campaignId: Int? = nil) {
-        let record = AffiliateURLRecord(departureCode: departureCode, arrivalCode: arrivalCode, outboundDate: outboundDate, returnDate: returnDate, shortenedURL: shortenedURL, affiliateURL: affiliateURL, isRoundTrip: isRoundTrip, partnerName: partnerName, campaignId: campaignId)
+    func addRecord(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool, partnerName: String? = nil, campaignId: Int? = nil, tripShortUrl: String? = nil, travelokaShortUrl: String? = nil, shareText: String? = nil) {
+        let record = AffiliateURLRecord(departureCode: departureCode, arrivalCode: arrivalCode, outboundDate: outboundDate, returnDate: returnDate, shortenedURL: shortenedURL, affiliateURL: affiliateURL, isRoundTrip: isRoundTrip, partnerName: partnerName, campaignId: campaignId, tripShortUrl: tripShortUrl, travelokaShortUrl: travelokaShortUrl, shareText: shareText)
         
         // Firestoreに保存（オフライン時は自動でキューイングされる）
         db.collection("history").document(record.id).setData(record.dictionary) { error in
@@ -234,7 +261,7 @@ struct AffiliateHistoryListView: View {
                 } else {
                     List {
                         ForEach(filteredRecords) { record in
-                            VStack(alignment: .leading, spacing: 8) {
+                            VStack(alignment: .leading, spacing: 10) {
                                 HStack {
                                     Text(record.createdDate, style: .date).font(.caption).foregroundStyle(.secondary)
                                     Text(record.createdDate, style: .time).font(.caption).foregroundStyle(.secondary)
@@ -247,49 +274,83 @@ struct AffiliateHistoryListView: View {
                                         .foregroundStyle(record.tripTypeColor)
                                         .cornerRadius(11)
                                     HStack(spacing: 4) {
-                                        Text(record.departureCode).font(.subheadline.weight(.semibold))
+                                        Text(record.departureCode.uppercased()).font(.subheadline.weight(.semibold))
                                         Text(record.directionArrow).font(.title3)
-                                        Text(record.arrivalCode).font(.subheadline.weight(.semibold))
+                                        Text(record.arrivalCode.uppercased()).font(.subheadline.weight(.semibold))
                                     }.foregroundStyle(record.tripTypeColor)
                                 }
+                                
                                 Text(record.dateDisplayText).font(.caption).foregroundStyle(.secondary)
-                                HStack(spacing: 8) {
-                                    Text(record.shortenedURL).font(.caption).lineLimit(1).truncationMode(.middle).foregroundStyle(.blue)
-                                    Spacer()
-                                    if let partnerName = record.partnerName, let campaignId = record.campaignId {
-                                        Button(action: { 
-                                            UIPasteboard.general.string = record.shortenedURL
-                                            showCopyFeedback = "コピーしました"
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                                showCopyFeedback = nil
-                                            }
-                                        }) {
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "doc.on.doc")
-                                                Text("他(\(campaignId))")
-                                            }.font(.caption2.weight(.semibold)).padding(.horizontal, 8).frame(height: 28).background(Color.orange.opacity(0.1)).foregroundStyle(.orange).cornerRadius(4)
-                                        }
-                                    } else {
-                                        Button(action: { 
-                                            UIPasteboard.general.string = record.statsURL
-                                            showCopyFeedback = "コピーしました"
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                                showCopyFeedback = nil
-                                            }
-                                        }) {
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "doc.on.doc")
-                                                Text("統計用")
-                                            }.font(.caption2.weight(.semibold)).padding(.horizontal, 8).frame(height: 28).background(Color.purple.opacity(0.1)).foregroundStyle(.purple).cornerRadius(4)
-                                        }
+                                
+                                // 短縮URLを表示
+                                Button(action: { 
+                                    UIPasteboard.general.string = record.shortenedURL
+                                    showCopyFeedback = "URLをコピーしました"
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                        showCopyFeedback = nil
                                     }
-                                    Button(action: { recordToDelete = record; showDeleteConfirm = true }) {
-                                        Image(systemName: "xmark.circle.fill").font(.caption).foregroundStyle(.red)
+                                }) {
+                                    Text(record.shortenedURL)
+                                        .font(.caption)
+                                        .lineLimit(1)
+                                        .truncationMode(.middle)
+                                        .foregroundStyle(.blue)
+                                        .padding(.vertical, 4)
+                                }
+
+                                // アクションボタン
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        if let shareText = record.shareText {
+                                            actionButton(label: "シェア文", color: .orange) {
+                                                UIPasteboard.general.string = shareText
+                                                showCopyFeedback = "シェア文をコピーしました"
+                                            }
+                                        }
+                                        
+                                        if let tripUrl = record.tripShortUrl {
+                                            actionButton(label: "Trip com", color: .blue) {
+                                                UIPasteboard.general.string = tripUrl
+                                                showCopyFeedback = "Trip comリンクをコピーしました"
+                                            }
+                                        }
+                                        
+                                        if let travelokaUrl = record.travelokaShortUrl {
+                                            actionButton(label: "Traveloka", color: .cyan) {
+                                                UIPasteboard.general.string = travelokaUrl
+                                                showCopyFeedback = "Travelokaリンクをコピーしました"
+                                            }
+                                        }
+                                        
+                                        actionButton(label: "統計用", color: .purple) {
+                                            UIPasteboard.general.string = record.statsURL
+                                            showCopyFeedback = "統計用URLをコピーしました"
+                                        }
+                                        
+                                        actionButton(label: "元URL", color: .gray) {
+                                            UIPasteboard.general.string = record.affiliateURL
+                                            showCopyFeedback = "アフィリエイトURLをコピーしました"
+                                        }
+                                        
+                                        Button(action: { recordToDelete = record; showDeleteConfirm = true }) {
+                                            Image(systemName: "trash")
+                                                .font(.caption2)
+                                                .padding(8)
+                                                .background(Color.red.opacity(0.1))
+                                                .foregroundStyle(.red)
+                                                .cornerRadius(4)
+                                        }
                                     }
                                 }
-                            }.padding(12).background(Color(.systemGray6)).cornerRadius(8).listRowInsets(EdgeInsets()).listRowSeparator(.hidden).listRowBackground(Color.clear)
+                            }
+                            .padding(12)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                            .listRowInsets(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
                         }
-                    }.listStyle(.inset)
+                    }.listStyle(.plain)
                 }
                 
                 if !filteredRecords.isEmpty {
@@ -312,6 +373,28 @@ struct AffiliateHistoryListView: View {
             }
         } message: {
             Text(recordToDelete != nil ? "この記録を削除しますか?" : "すべての履歴を削除しますか?")
+        }
+    }
+    
+    @ViewBuilder
+    private func actionButton(label: String, color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: {
+            action()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                showCopyFeedback = nil
+            }
+        }) {
+            Text(label)
+                .font(.caption2.weight(.semibold))
+                .padding(.horizontal, 10)
+                .frame(height: 32)
+                .background(color.opacity(0.1))
+                .foregroundStyle(color)
+                .cornerRadius(6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(color.opacity(0.3), lineWidth: 1)
+                )
         }
     }
 }
