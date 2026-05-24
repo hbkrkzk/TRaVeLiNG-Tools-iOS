@@ -396,19 +396,19 @@ struct SkyscannerAffiliateView: View {
         let tripTypeLabel = isRoundTrip ? "往復" : "片道"
         text += "✈️スカイスキャナーで検索\n\(tripTypeLabel): \(skyscannerShortUrl)\n\n"
         
-        // パートナー選択がない場合、楽天モバイルを表示
+        // パートナー選択がない場合のみ楽天モバイルを表示
         if tripShortUrl == nil && travelokaShortUrl == nil {
-            text += "💳️セゾンプラチナビジネス\n"
-            text += "✅PP無料付帯\n"
-            text += "▽特別招待ー初年度無料＆アマギフ1.2万\n"
-            text += "https://x.gd/TYSba"
-        } else {
-            // パートナー選択がある場合、楽天モバイル前に改行
-            text += "💳️セゾンプラチナビジネス\n"
-            text += "✅PP無料付帯\n"
-            text += "▽特別招待ー初年度無料＆アマギフ1.2万\n"
-            text += "https://x.gd/TYSba"
+            text += "📲楽天モバイル\n"
+            text += "🌏海外データ2GB/月\n"
+            text += "▽乗換で1.4万ptゲット\n"
+            text += "https://x.gd/6LqKk\n\n"
         }
+        
+        // クレジットカード情報
+        text += "💳️セゾンプラチナビジネス\n"
+        text += "✅PP無料付帯\n"
+        text += "▽特別招待ー初年度無料＆アマギフ1.2万\n"
+        text += "https://x.gd/TYSba"
         
         return text
     }
