@@ -305,7 +305,7 @@ struct SkyscannerAffiliateView: View {
     
     private func generateTripURL(info: SkyscannerFlightInfo) -> String? {
         let baseURL = "https://jp.trip.com/flights/showfarefirst"
-        let isRoundTrip = info.returnDate != nil && info.returnDate != info.departureDate
+        let isRoundTrip = info.isRoundTrip
         let rdateValue = isRoundTrip ? formatDateForTrip(info.returnDate ?? info.departureDate) : formatDateForTrip(info.departureDate)
         
         // URLコンポーネントの順序を重視
@@ -315,7 +315,7 @@ struct SkyscannerAffiliateView: View {
     }
     
     private func generateTravelokaURL(info: SkyscannerFlightInfo) -> String? {
-        let isRoundTrip = info.returnDate != nil && info.returnDate != info.departureDate
+        let isRoundTrip = info.isRoundTrip
         let baseURL = "https://www.traveloka.com/ja-jp/flight"
         let endpoint = isRoundTrip ? "fulltwosearch" : "fullsearch"
         
