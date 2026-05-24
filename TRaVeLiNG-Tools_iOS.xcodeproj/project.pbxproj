@@ -15,6 +15,9 @@
 		817D66A32F816A74005570C1 /* OfflineAIChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D669F2F816A74005570C1 /* OfflineAIChatView.swift */; };
 		817D66A42F816A74005570C1 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D669C2F816A74005570C1 /* DesignSystem.swift */; };
 		817D66A62F816E1A005570C1 /* OfflineAITranslatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D66A52F816E1A005570C1 /* OfflineAITranslatorView.swift */; };
+		818201D22FC2913E00DECF85 /* HistoryModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 818201D02FC2913E00DECF85 /* HistoryModule.swift */; };
+		818201D32FC2913E00DECF85 /* TranslationLanguages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 818201D12FC2913E00DECF85 /* TranslationLanguages.swift */; };
+		818201D52FC2915700DECF85 /* ImpactAffiliateServiceTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 818201D42FC2915700DECF85 /* ImpactAffiliateServiceTest.swift */; };
 		A1B2C3D4E5F6000000000001 /* TRaVeLiNG_Tools_iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000011 /* TRaVeLiNG_Tools_iOSApp.swift */; };
 		A1B2C3D4E5F6000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000012 /* ContentView.swift */; };
 		A1B2C3D4E5F6000000000003 /* BoardingBarcodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000013 /* BoardingBarcodeView.swift */; };
@@ -36,6 +39,9 @@
 		817D669E2F816A74005570C1 /* OfflineAIChatSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineAIChatSettings.swift; sourceTree = "<group>"; };
 		817D669F2F816A74005570C1 /* OfflineAIChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineAIChatView.swift; sourceTree = "<group>"; };
 		817D66A52F816E1A005570C1 /* OfflineAITranslatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineAITranslatorView.swift; sourceTree = "<group>"; };
+		818201D02FC2913E00DECF85 /* HistoryModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryModule.swift; sourceTree = "<group>"; };
+		818201D12FC2913E00DECF85 /* TranslationLanguages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationLanguages.swift; sourceTree = "<group>"; };
+		818201D42FC2915700DECF85 /* ImpactAffiliateServiceTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpactAffiliateServiceTest.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000010 /* TRaVeLiNG-Tools_iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TRaVeLiNG-Tools_iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1B2C3D4E5F6000000000011 /* TRaVeLiNG_Tools_iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRaVeLiNG_Tools_iOSApp.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -79,6 +85,9 @@
 			isa = PBXGroup;
 			children = (
 				817D66A52F816E1A005570C1 /* OfflineAITranslatorView.swift */,
+				818201D02FC2913E00DECF85 /* HistoryModule.swift */,
+				818201D12FC2913E00DECF85 /* TranslationLanguages.swift */,
+				818201D42FC2915700DECF85 /* ImpactAffiliateServiceTest.swift */,
 				817D669B2F816A74005570C1 /* ChatMessage.swift */,
 				817D669C2F816A74005570C1 /* DesignSystem.swift */,
 				817D669E2F816A74005570C1 /* OfflineAIChatSettings.swift */,
@@ -188,9 +197,12 @@
 				817D668D2F80E055005570C1 /* BrownNoisePlayer.swift in Sources */,
 				A1B2C3D4E5F6000000000002 /* ContentView.swift in Sources */,
 				A1B2C3D4E5F6000000000003 /* BoardingBarcodeView.swift in Sources */,
+				818201D52FC2915700DECF85 /* ImpactAffiliateServiceTest.swift in Sources */,
 				A1B2C3D4E5F6000000000004 /* FireSimulatorView.swift in Sources */,
 				A1B2C3D4E5F6000000000006 /* SkyscannerURLService.swift in Sources */,
 				A1B2C3D4E5F600000000000A /* ImpactAffiliateService.swift in Sources */,
+				818201D22FC2913E00DECF85 /* HistoryModule.swift in Sources */,
+				818201D32FC2913E00DECF85 /* TranslationLanguages.swift in Sources */,
 				A1B2C3D4E5F6000000000007 /* SkyscannerAffiliateView.swift in Sources */,
 				A1B2C3D4E5F6000000000008 /* ShareTextService.swift in Sources */,
 			);
