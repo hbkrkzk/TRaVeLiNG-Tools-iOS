@@ -305,12 +305,15 @@ struct SkyscannerAffiliateView: View {
     
     private func generateTripURL(info: SkyscannerFlightInfo) -> String? {
         let baseURL = "https://jp.trip.com/flights/showfarefirst"
+        let isRoundTrip = info.returnDate != nil && info.returnDate != info.departureDate
+        let rdateValue = isRoundTrip ? formatDateForTrip(info.returnDate ?? info.departureDate) : formatDateForTrip(info.departureDate)
+        
         let params: [String: String] = [
             "dcity": info.departure,
             "acity": info.arrival,
             "ddate": formatDateForTrip(info.departureDate),
-            "rdate": formatDateForTrip(info.returnDate ?? info.departureDate),
-            "triptype": "rt",
+            "rdate": rdateValue,
+            "triptype": isRoundTrip ? "rt" : "ow",
             "class": "y",
             "lowpricesource": "searchform",
             "quantity": "1",
