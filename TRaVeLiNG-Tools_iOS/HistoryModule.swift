@@ -35,7 +35,7 @@ struct AffiliateURLRecord: Identifiable, Codable {
         campaignId: Int? = nil,
         tripShortUrl: String? = nil,
         travelokaShortUrl: String? = nil,
-        kiwiShortUrl: String?; let agodaShortUrl: String? = nil,
+        kiwiShortUrl: String? = nil, agodaShortUrl: String? = nil,
         shareText: String? = nil
     ) {
         self.id = id
@@ -175,7 +175,7 @@ class AffiliateURLHistoryManager: ObservableObject {
             }
     }
     
-    func addRecord(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool, partnerName: String? = nil, campaignId: Int? = nil, tripShortUrl: String? = nil, travelokaShortUrl: String? = nil, kiwiShortUrl: String?; let agodaShortUrl: String? = nil, shareText: String? = nil) {
+    func addRecord(departureCode: String, arrivalCode: String, outboundDate: String, returnDate: String?, shortenedURL: String, affiliateURL: String, isRoundTrip: Bool, partnerName: String? = nil, campaignId: Int? = nil, tripShortUrl: String? = nil, travelokaShortUrl: String? = nil, kiwiShortUrl: String? = nil, agodaShortUrl: String? = nil, shareText: String? = nil) {
         let record = AffiliateURLRecord(departureCode: departureCode, arrivalCode: arrivalCode, outboundDate: outboundDate, returnDate: returnDate, shortenedURL: shortenedURL, affiliateURL: affiliateURL, isRoundTrip: isRoundTrip, partnerName: partnerName, campaignId: campaignId, tripShortUrl: tripShortUrl, travelokaShortUrl: travelokaShortUrl, kiwiShortUrl: kiwiShortUrl, agodaShortUrl: agodaShortUrl, shareText: shareText)
         
         // Firestoreに保存（オフライン時は自動でキューイングされる）

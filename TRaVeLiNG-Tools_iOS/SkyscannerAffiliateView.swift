@@ -811,8 +811,8 @@ class TravelPayoutsAffiliateService {
             let partnerURL = "https://c104.travelpayouts.com/click?shmarker=\(marker)&promo_id=2854&source_type=customlink&type=click&custom_url=\(encodedUrl)"
             return (partnerURL: partnerURL, campaignId: campaignId)
         }
-
-        let linkRequest = LinkRequest(url: url, sub_id: nil)
+        
+        guard let requestURL = URL(string: baseURL) else {
             throw TravelPayoutsError.invalidURL
         }
         
@@ -883,5 +883,25 @@ class TravelPayoutsAffiliateService {
             }
         }
         return "不明なエラー"
+    }
+}
+
+// MARK: - UI Helpers
+struct CompactToggleStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Button(action: { configuration.isOn.toggle() }) {
+            HStack(spacing: 4) {
+                Image(systemName: configuration.isOn ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(configuration.isOn ? .blue : .gray)
+                configuration.label
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(configuration.isOn ? .primary : .secondary)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(configuration.isOn ? Color.blue.opacity(0.1) : Color.gray.opacity(0.05))
+            .cornerRadius(8)
+        }
+        .buttonStyle(.plain)
     }
 }
