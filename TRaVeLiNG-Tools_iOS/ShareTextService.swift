@@ -95,7 +95,7 @@ https://x.gd/TYSba
         
         // パートナーリンク部分
         let partnerLine = """
-✈️直接\(partnerName)で予約
+✈️\(partnerName)で予約
 \(partnerURL)
 
 """

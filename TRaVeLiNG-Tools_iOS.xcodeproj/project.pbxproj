@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		817D66882F80DD64005570C1 /* ImpactConfig.plist in Resources */ = {isa = PBXBuildFile; fileRef = 817D66872F80DD64005570C1 /* ImpactConfig.plist */; };
-		D8CE3FDEE4C54B6C82DF7710 /* LocalConfig.plist in Resources */ = {isa = PBXBuildFile; fileRef = B08B988E889A4C848EC7627C /* LocalConfig.plist */; };
 		817D668D2F80E055005570C1 /* BrownNoisePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D668C2F80E055005570C1 /* BrownNoisePlayer.swift */; };
 		817D66902F80E19C005570C1 /* brownnoise_30min.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 817D668E2F80E19C005570C1 /* brownnoise_30min.m4a */; };
 		817D66A12F816A74005570C1 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 817D669B2F816A74005570C1 /* ChatMessage.swift */; };
@@ -19,6 +18,11 @@
 		818201D22FC2913E00DECF85 /* HistoryModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 818201D02FC2913E00DECF85 /* HistoryModule.swift */; };
 		818201D32FC2913E00DECF85 /* TranslationLanguages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 818201D12FC2913E00DECF85 /* TranslationLanguages.swift */; };
 		818201D52FC2915700DECF85 /* ImpactAffiliateServiceTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 818201D42FC2915700DECF85 /* ImpactAffiliateServiceTest.swift */; };
+		818201D72FC2E70A00DECF85 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 818201D62FC2E70A00DECF85 /* GoogleService-Info.plist */; };
+		818201DA2FC2E7B000DECF85 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 818201D92FC2E7B000DECF85 /* FirebaseAnalytics */; };
+		818201DC2FC2E7B000DECF85 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = 818201DB2FC2E7B000DECF85 /* FirebaseDatabase */; };
+		818201DF2FC2EA4100DECF85 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 818201DE2FC2EA4100DECF85 /* FirebaseCore */; };
+		818201E12FC2EA4100DECF85 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 818201E02FC2EA4100DECF85 /* FirebaseFirestore */; };
 		A1B2C3D4E5F6000000000001 /* TRaVeLiNG_Tools_iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000011 /* TRaVeLiNG_Tools_iOSApp.swift */; };
 		A1B2C3D4E5F6000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000012 /* ContentView.swift */; };
 		A1B2C3D4E5F6000000000003 /* BoardingBarcodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000013 /* BoardingBarcodeView.swift */; };
@@ -28,12 +32,11 @@
 		A1B2C3D4E5F6000000000007 /* SkyscannerAffiliateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000017 /* SkyscannerAffiliateView.swift */; };
 		A1B2C3D4E5F6000000000008 /* ShareTextService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000018 /* ShareTextService.swift */; };
 		A1B2C3D4E5F600000000000A /* ImpactAffiliateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F600000000001A /* ImpactAffiliateService.swift */; };
+		D8CE3FDEE4C54B6C82DF7710 /* LocalConfig.plist in Resources */ = {isa = PBXBuildFile; fileRef = B08B988E889A4C848EC7627C /* LocalConfig.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		817D66872F80DD64005570C1 /* ImpactConfig.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = ImpactConfig.plist; sourceTree = "<group>"; };
-		B08B988E889A4C848EC7627C /* LocalConfig.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = LocalConfig.plist; sourceTree = "<group>"; };
-		0D6682C419E14AEB8EA3FA3C /* LocalConfig.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = LocalConfig.plist; sourceTree = "<group>"; };
 		817D66892F80DE1E005570C1 /* TRaVeLiNG-Tools-iOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "TRaVeLiNG-Tools-iOS-Info.plist"; sourceTree = SOURCE_ROOT; };
 		817D668C2F80E055005570C1 /* BrownNoisePlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrownNoisePlayer.swift; sourceTree = "<group>"; };
 		817D668E2F80E19C005570C1 /* brownnoise_30min.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = brownnoise_30min.m4a; sourceTree = "<group>"; };
@@ -45,6 +48,7 @@
 		818201D02FC2913E00DECF85 /* HistoryModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryModule.swift; sourceTree = "<group>"; };
 		818201D12FC2913E00DECF85 /* TranslationLanguages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationLanguages.swift; sourceTree = "<group>"; };
 		818201D42FC2915700DECF85 /* ImpactAffiliateServiceTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpactAffiliateServiceTest.swift; sourceTree = "<group>"; };
+		818201D62FC2E70A00DECF85 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000010 /* TRaVeLiNG-Tools_iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TRaVeLiNG-Tools_iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1B2C3D4E5F6000000000011 /* TRaVeLiNG_Tools_iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRaVeLiNG_Tools_iOSApp.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -55,6 +59,7 @@
 		A1B2C3D4E5F6000000000017 /* SkyscannerAffiliateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyscannerAffiliateView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000018 /* ShareTextService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareTextService.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F600000000001A /* ImpactAffiliateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpactAffiliateService.swift; sourceTree = "<group>"; };
+		B08B988E889A4C848EC7627C /* LocalConfig.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = LocalConfig.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +67,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				818201DC2FC2E7B000DECF85 /* FirebaseDatabase in Frameworks */,
+				818201E12FC2EA4100DECF85 /* FirebaseFirestore in Frameworks */,
+				818201DF2FC2EA4100DECF85 /* FirebaseCore in Frameworks */,
+				818201DA2FC2E7B000DECF85 /* FirebaseAnalytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -76,10 +85,18 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		818201DD2FC2EA4100DECF85 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		A1B2C3D4E5F6000000000030 = {
 			isa = PBXGroup;
 			children = (
 				A1B2C3D4E5F6000000000031 /* TRaVeLiNG-Tools_iOS */,
+				818201DD2FC2EA4100DECF85 /* Frameworks */,
 				A1B2C3D4E5F6000000000032 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -87,6 +104,7 @@
 		A1B2C3D4E5F6000000000031 /* TRaVeLiNG-Tools_iOS */ = {
 			isa = PBXGroup;
 			children = (
+				818201D62FC2E70A00DECF85 /* GoogleService-Info.plist */,
 				817D66A52F816E1A005570C1 /* OfflineAITranslatorView.swift */,
 				818201D02FC2913E00DECF85 /* HistoryModule.swift */,
 				818201D12FC2913E00DECF85 /* TranslationLanguages.swift */,
@@ -165,6 +183,9 @@
 				Base,
 			);
 			mainGroup = A1B2C3D4E5F6000000000030;
+			packageReferences = (
+				818201D82FC2E7B000DECF85 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			productRefGroup = A1B2C3D4E5F6000000000032 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -181,6 +202,7 @@
 			files = (
 				817D66882F80DD64005570C1 /* ImpactConfig.plist in Resources */,
 				D8CE3FDEE4C54B6C82DF7710 /* LocalConfig.plist in Resources */,
+				818201D72FC2E70A00DECF85 /* GoogleService-Info.plist in Resources */,
 				A1B2C3D4E5F6000000000005 /* Assets.xcassets in Resources */,
 				817D66902F80E19C005570C1 /* brownnoise_30min.m4a in Resources */,
 			);
@@ -384,6 +406,40 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		818201D82FC2E7B000DECF85 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.13.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		818201D92FC2E7B000DECF85 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 818201D82FC2E7B000DECF85 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		818201DB2FC2E7B000DECF85 /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 818201D82FC2E7B000DECF85 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDatabase;
+		};
+		818201DE2FC2EA4100DECF85 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 818201D82FC2E7B000DECF85 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		818201E02FC2EA4100DECF85 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 818201D82FC2E7B000DECF85 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A1B2C3D4E5F6000000000050 /* Project object */;
 }

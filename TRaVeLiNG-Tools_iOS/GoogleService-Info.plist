@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyCPPpvHvLqDw4SQ4bXtFN70U8YMEFTsZtY</string>
+	<key>GCM_SENDER_ID</key>
+	<string>243198778078</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.traveling.toolsios</string>
+	<key>PROJECT_ID</key>
+	<string>traveling-tools</string>
+	<key>STORAGE_BUCKET</key>
+	<string>traveling-tools.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:243198778078:ios:c408f5774e2ccbc5ab404f</string>
+</dict>
+</plist>

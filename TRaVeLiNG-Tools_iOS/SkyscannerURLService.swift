@@ -404,9 +404,17 @@ class SkyscannerURLService {
         task.resume()
     }
     
-    private static func formatDateToYYMMDD(_ dateString: String) -> String {
-        if dateString.count == 8 {
-            return String(dateString.dropFirst(2))
+    private static func normalizeDate(_ dateString: String) -> String {
+        let digits = dateString.filter { "0123456789".contains($0) }
+        var d = digits
+        if d.count == 6 {
+            d = "20" + d
+        }
+        if d.count == 8 {
+            let year = d.prefix(4)
+            let month = d.dropFirst(4).prefix(2)
+            let day = d.dropFirst(6).prefix(2)
+            return "\(year)-\(month)-\(day)"
         }
         return dateString
     }
@@ -435,13 +443,13 @@ class SkyscannerURLService {
             let arrival = pathComponents[3].lowercased()
             let departDate = pathComponents[4]
             
-            let formattedDepartDate = formatDateToYYMMDD(departDate)
+            let formattedDepartDate = normalizeDate(departDate)
             print("✅ Extracted: \(departure) -> \(arrival) on \(formattedDepartDate)")
             
             // 往復/片道判定: pathComponents[5]が存在してconfigでなければ往復
             if pathComponents.count > 5 && pathComponents[5] != "config" {
                 let returnDate = pathComponents[5]
-                let formattedReturnDate = formatDateToYYMMDD(returnDate)
+                let formattedReturnDate = normalizeDate(returnDate)
                 print("✅ Return date: \(formattedReturnDate)")
                 
                 return SkyscannerFlightInfo(
@@ -470,11 +478,11 @@ class SkyscannerURLService {
                let arrival = extractQueryParam(query, "arrival") ?? extractQueryParam(query, "to"),
                let departDate = extractQueryParam(query, "departDate") ?? extractQueryParam(query, "outboundDate") {
                 
-                let formattedDepartDate = formatDateToYYMMDD(departDate)
+                let formattedDepartDate = normalizeDate(departDate)
                 print("✅ Extracted: \(departure) -> \(arrival) on \(formattedDepartDate)")
                 
                 if let returnDate = extractQueryParam(query, "returnDate") ?? extractQueryParam(query, "inboundDate") {
-                    let formattedReturnDate = formatDateToYYMMDD(returnDate)
+                    let formattedReturnDate = normalizeDate(returnDate)
                     return SkyscannerFlightInfo(
                         departure: departure,
                         arrival: arrival,

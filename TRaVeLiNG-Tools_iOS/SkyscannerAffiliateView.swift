@@ -34,18 +34,29 @@ struct SkyscannerAffiliateView: View {
                                 .font(.body)
                                 .frame(height: 44)
                             
-                            Button(action: pasteFromClipboard) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "doc.on.clipboard.fill")
-                                    Text("ペーストする")
+                            HStack(spacing: 8) {
+                                Button(action: pasteFromClipboard) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "doc.on.clipboard.fill")
+                                        Text("ペーストする")
+                                    }
+                                    .font(.system(.body, design: .rounded))
+                                    .fontWeight(.semibold)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 48)
+                                    .foregroundStyle(Color.blue)
+                                    .background(Color.clear)
+                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.blue, lineWidth: 2))
                                 }
-                                .font(.system(.body, design: .rounded))
-                                .fontWeight(.semibold)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 48)
-                                .foregroundStyle(Color.blue)
-                                .background(Color.clear)
-                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.blue, lineWidth: 2))
+                                
+                                Button(action: { skyscannerLink = "" }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 16))
+                                        .frame(width: 44, height: 48)
+                                        .foregroundStyle(.gray)
+                                        .background(Color.clear)
+                                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.3), lineWidth: 1))
+                                }
                             }
                         }
                     }
@@ -55,10 +66,30 @@ struct SkyscannerAffiliateView: View {
                     
                     // パートナー選択
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("パートナー選択")
-                            .font(.headline)
+                        HStack {
+                            Text("パートナー選択")
+                                .font(.headline)
+                            Spacer()
+                        }
                         
                         VStack(spacing: 12) {
+                            Button(action: {
+                                tripComEnabled = true
+                                travelokaEnabled = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "plus.circle.fill")
+                                    Text("Trip.com & Travelokaを一括選択")
+                                }
+                                .font(.subheadline.weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(Color.blue)
+                                .foregroundStyle(.white)
+                                .cornerRadius(8)
+                            }
+                            .padding(.bottom, 4)
+
                             Toggle(isOn: $tripComEnabled) {
                                 HStack(spacing: 8) {
                                     Image(systemName: "checkmark.circle.fill")
@@ -319,31 +350,44 @@ struct SkyscannerAffiliateView: View {
         let baseURL = "https://www.traveloka.com/ja-jp/flight"
         let endpoint = isRoundTrip ? "fulltwosearch" : "fullsearch"
         
+        // BJSAはTravelokaでハンドルできないためPEKに変換
+        let departure = info.departure.lowercased() == "bjsa" ? "PEK" : info.departure
+        let arrival = info.arrival.lowercased() == "bjsa" ? "PEK" : info.arrival
+        
         let depDate = formatDateForTraveloka(info.departureDate)
         let retDate = isRoundTrip ? formatDateForTraveloka(info.returnDate ?? info.departureDate) : "NA"
         
         // URLコンポーネントの順序を重視
-        let urlString = "\(baseURL)/\(endpoint)?ap=\(info.departure).\(info.arrival)&dt=\(depDate).\(retDate)&ps=1.0.0&sc=ECONOMY&funnelSource=SEO-Default-SearchForm"
+        let urlString = "\(baseURL)/\(endpoint)?ap=\(departure).\(arrival)&dt=\(depDate).\(retDate)&ps=1.0.0&sc=ECONOMY&funnelSource=SEO-Default-SearchForm"
         
         return urlString
     }
     
     private func formatDateForTrip(_ dateStr: String) -> String {
-        // Input: yyyymmdd, Output: yyyy-mm-dd
-        guard dateStr.count >= 8 else { return dateStr }
-        let year = dateStr.prefix(4)
-        let month = dateStr.dropFirst(4).prefix(2)
-        let day = dateStr.dropFirst(6).prefix(2)
+        // すでに yyyy-mm-dd 形式ならそのまま返す
+        if dateStr.count == 10 && dateStr.contains("-") {
+            return dateStr
+        }
+        
+        // 数字のみ抽出して yyyymmdd 形式を想定して変換
+        let digits = dateStr.filter { "0123456789".contains($0) }
+        guard digits.count >= 8 else { return dateStr }
+        
+        let year = digits.prefix(4)
+        let month = digits.dropFirst(4).prefix(2)
+        let day = digits.dropFirst(6).prefix(2)
         return "\(year)-\(month)-\(day)"
     }
     
     private func formatDateForTraveloka(_ dateStr: String) -> String {
-        // Input: yyyymmdd, Output: dd-m-yyyy (month without leading zero)
-        guard dateStr.count >= 8 else { return dateStr }
-        let year = dateStr.prefix(4)
-        let month = dateStr.dropFirst(4).prefix(2)
-        let day = dateStr.dropFirst(6).prefix(2)
-        // Remove leading zero from month if present
+        // Input: yyyy-mm-dd or yyyymmdd, Output: dd-m-yyyy (月は先頭ゼロなし)
+        let digits = dateStr.filter { "0123456789".contains($0) }
+        guard digits.count >= 8 else { return dateStr }
+        
+        let year = digits.prefix(4)
+        let month = digits.dropFirst(4).prefix(2)
+        let day = digits.dropFirst(6).prefix(2)
+        // 月の先頭ゼロを削除
         let monthInt = Int(month) ?? 0
         return "\(day)-\(monthInt)-\(year)"
     }
@@ -368,16 +412,16 @@ struct SkyscannerAffiliateView: View {
         
         // パートナーリンクを追加
         if let tripUrl = tripShortUrl {
-            text += "✈️直接Trip.comで予約\n\(tripUrl)\n\n"
+            text += "✈️Trip.comで予約\n\(tripUrl)\n\n"
         }
         
         if let travelokaUrl = travelokaShortUrl {
-            text += "✈️直接Travelokaで予約\n\(travelokaUrl)\n\n"
+            text += "✈️Travelokaで予約\n\(travelokaUrl)\n\n"
         }
         
         // Skyscanner
         let tripTypeLabel = isRoundTrip ? "往復" : "片道"
-        text += "✈️スカイスキャナーで検索\n\(tripTypeLabel): \(skyscannerShortUrl)\n\n"
+        text += "🔍️スカイスキャナーで検索\n\(tripTypeLabel): \(skyscannerShortUrl)\n\n"
         
         // パートナー選択がない場合のみ楽天モバイルを表示
         if tripShortUrl == nil && travelokaShortUrl == nil {
