@@ -510,11 +510,11 @@ struct SkyscannerAffiliateView: View {
     }
     
     private func parseSkyscannerLinkAsync(_ link: String) async -> SkyscannerFlightInfo? {
-        return try? await SkyscannerURLService.parseSkyscannerLinkAsync(link)
+        return await SkyscannerURLService.parseSkyscannerLinkAsync(link)
     }
     
     private func shortenURLAsync(_ url: String) async -> String? {
-        return try? await SkyscannerURLService.shortenURLAsync(url)
+        return await SkyscannerURLService.shortenURLAsync(url)
     }
     
     private func generatePartnerAffiliateLink(url: String, campaignId: Int) async -> String? {

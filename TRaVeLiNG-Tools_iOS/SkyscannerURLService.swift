@@ -142,6 +142,14 @@ class SkyscannerURLService {
         }
     }
     
+    static func parseSkyscannerLinkAsync(_ urlString: String) async -> SkyscannerFlightInfo? {
+        await withCheckedContinuation { continuation in
+            parseSkyscannerLink(urlString) { info in
+                continuation.resume(returning: info)
+            }
+        }
+    }
+    
     /// リダイレクトURL (skyscanner.app.link) を解析して元のURLを取得
     private static func resolveRedirectURL(_ shortUrl: String, completion: @escaping (String?) -> Void) {
         print("🔗 Resolving redirect: \(shortUrl)")
@@ -519,7 +527,7 @@ class SkyscannerURLService {
     
     // MARK: - URL Shortening
     
-    func shortenURL(_ url: String, completion: @escaping (String?) -> Void) {
+    static func shortenURL(_ url: String, completion: @escaping (String?) -> Void) {
         let apiKey = "7d2ad123799e3bdd05a3553b5d2f7968"
         
         // Web版と同様にencodeURIComponentの動作を再現
@@ -579,6 +587,14 @@ class SkyscannerURLService {
         }
         
         task.resume()
+    }
+
+    static func shortenURLAsync(_ url: String) async -> String? {
+        await withCheckedContinuation { continuation in
+            shortenURL(url) { shortened in
+                continuation.resume(returning: shortened)
+            }
+        }
     }
     
     // MARK: - Direct Affiliate URL Generation
