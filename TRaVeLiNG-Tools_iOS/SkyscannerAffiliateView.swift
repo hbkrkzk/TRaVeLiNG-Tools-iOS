@@ -477,7 +477,7 @@ struct SkyscannerAffiliateView: View {
         text += "💳️セゾンプラチナビジネス\n"
         text += "✅PP無料付帯\n"
         text += "▽特別招待ー初年度無料＆アマギフ1.2万\n"
-        text += "https://x.gd/TYSba"
+        text += "https://x.gd/xdQok"
         
         return text
     }

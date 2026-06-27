@@ -24,7 +24,7 @@ class ShareTextService {
 💳️セゾンプラチナビジネス
 ✅PP無料付帯
 ▽特別招待ー初年度無料＆アマギフ1.2万
-https://x.gd/TYSba
+https://x.gd/xdQok
 """
     
     private let defaultOnewayTemplate = """
@@ -34,7 +34,7 @@ https://x.gd/TYSba
 💳️セゾンプラチナビジネス
 ✅PP無料付帯
 ▽特別招待ー初年度無料＆アマギフ1.2万
-https://x.gd/TYSba
+https://x.gd/xdQok
 """
     
     // MARK: - Initialization
